@@ -1,0 +1,113 @@
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { Gift, Save } from 'lucide-react'
+
+interface EditPrizeModalProps {
+    isOpen: boolean
+    onOpenChange: (open: boolean) => void
+    prize: Prize | null
+    onEditPrize: (prize: Prize) => void
+}
+
+interface Prize {
+    id: number
+    name: string
+    range_start: number
+    range_end: number
+    sorteado: boolean
+}
+
+export function EditPrizeModal({ isOpen, onOpenChange, prize, onEditPrize }: EditPrizeModalProps) {
+    const [editedPrize, setEditedPrize] = useState<Prize | null>(null)
+
+    useEffect(() => {
+        if (prize) {
+            setEditedPrize({ ...prize })
+        }
+    }, [prize])
+
+    const handleSave = () => {
+        if (editedPrize) {
+            onEditPrize(editedPrize)
+            onOpenChange(false)
+        }
+    }
+
+    if (!editedPrize) return null
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <Dialog open={isOpen} onOpenChange={onOpenChange}>
+                    <DialogContent className="bg-gradient-to-br from-teal-700 to-blue-900 text-white sm:max-w-[425px] rounded-3xl border-2 border-white/20 shadow-xl">
+                        <DialogHeader>
+                            <DialogTitle className="text-3xl font-bold text-center flex items-center justify-center text-white">
+                                <Gift className="mr-2 h-8 w-8" />
+                                Editar Premio
+                            </DialogTitle>
+                        </DialogHeader>
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                            className="grid gap-6 py-4"
+                        >
+                            <div className="space-y-2">
+                                <Label htmlFor="name" className="text-lg font-semibold text-white">
+                                    Nombre del Premio
+                                </Label>
+                                <Input
+                                    id="name"
+                                    value={editedPrize.name}
+                                    onChange={(e) => setEditedPrize({ ...editedPrize, name: e.target.value })}
+                                    className="bg-white/10 border-white/20 text-white placeholder-white/50 rounded-xl"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="range_start" className="text-lg font-semibold text-white">
+                                    Rango Inicial
+                                </Label>
+                                <Input
+                                    id="range_start"
+                                    type="number"
+                                    value={editedPrize.range_start}
+                                    onChange={(e) => setEditedPrize({ ...editedPrize, range_start: parseInt(e.target.value) })}
+                                    className="bg-white/10 border-white/20 text-white placeholder-white/50 rounded-xl"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="range_end" className="text-lg font-semibold text-white">
+                                    Rango Final
+                                </Label>
+                                <Input
+                                    id="range_end"
+                                    type="number"
+                                    value={editedPrize.range_end}
+                                    onChange={(e) => setEditedPrize({ ...editedPrize, range_end: parseInt(e.target.value) })}
+                                    className="bg-white/10 border-white/20 text-white placeholder-white/50 rounded-xl"
+                                />
+                            </div>
+                        </motion.div>
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <Button onClick={handleSave} className="w-full bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white transition-colors duration-200 rounded-xl">
+                                <Save className="mr-2 h-5 w-5" />
+                                Guardar Cambios
+                            </Button>
+                        </motion.div>
+                    </DialogContent>
+                </Dialog>
+            )}
+        </AnimatePresence>
+    )
+}
+
