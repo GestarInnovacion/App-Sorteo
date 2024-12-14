@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4F46E5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="ticketGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#60A5FA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="url(#bgGradient)" />
+  
+  <!-- Outer ring -->
+  <circle cx="100" cy="100" r="90" fill="none" stroke="white" stroke-width="4" />
+  
+  <!-- Ticket shape -->
+  <path d="M50 70 L150 70 Q160 70 160 80 L160 120 Q160 130 150 130 L50 130 Q40 130 40 120 L40 80 Q40 70 50 70 Z" fill="url(#ticketGradient)" />
+  
+  <!-- Ticket details -->
+  <rect x="45" y="80" width="110" height="5" fill="white" opacity="0.7" />
+  <rect x="45" y="115" width="110" height="5" fill="white" opacity="0.7" />
+  
+  <!-- Star burst -->
+  <g transform="translate(100 100)">
+    <g transform="rotate(0)">
+      <path d="M0 -60 L5 -40 L0 -45 L-5 -40 Z" fill="yellow" />
+    </g>
+    <g transform="rotate(45)">
+      <path d="M0 -60 L5 -40 L0 -45 L-5 -40 Z" fill="yellow" />
+    </g>
+    <g transform="rotate(90)">
+      <path d="M0 -60 L5 -40 L0 -45 L-5 -40 Z" fill="yellow" />
+    </g>
+    <g transform="rotate(135)">
+      <path d="M0 -60 L5 -40 L0 -45 L-5 -40 Z" fill="yellow" />
+    </g>
+  </g>
+  
+  <!-- Text -->
+  <text x="100" y="110" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="white">SORTEO+</text>
+</svg>
+
