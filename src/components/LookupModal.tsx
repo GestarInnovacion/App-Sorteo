@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Ticket } from 'lucide-react'
+import { Search, Ticket, User, CreditCard } from 'lucide-react'
 import { Participant } from '../types'
 
 interface LookupModalProps {
@@ -13,71 +13,111 @@ interface LookupModalProps {
 
 export function LookupModal({ isOpen, onOpenChange }: LookupModalProps) {
     const [searchTerm, setSearchTerm] = useState('')
-    const [searchResult, setSearchResult] = useState<Participant | null>(null)
-    const [isSearching, setIsSearching] = useState(false)
+    const [suggestions, setSuggestions] = useState<Participant[]>([])
+    const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null)
+    const [participants, setParticipants] = useState<Participant[]>([])
 
-    const handleSearch = () => {
-        setIsSearching(true)
-        setTimeout(() => {
-            const participants = JSON.parse(localStorage.getItem('participants') || '[]') as Participant[]
-            const found = participants.find((p) =>
-                p.cedula === searchTerm || p.name.toLowerCase() === searchTerm.toLowerCase()
+    useEffect(() => {
+        const storedParticipants = JSON.parse(localStorage.getItem('participants') || '[]') as Participant[]
+        setParticipants(storedParticipants)
+    }, [])
+
+    useEffect(() => {
+        if (searchTerm.length > 2) {
+            const filteredParticipants = participants.filter(p =>
+                p.cedula.includes(searchTerm) || p.name.toLowerCase().includes(searchTerm.toLowerCase())
             )
-            setSearchResult(found || null)
-            setIsSearching(false)
-        }, 1000) // Simulating a delay for the search
+            setSuggestions(filteredParticipants.slice(0, 5))
+        } else {
+            setSuggestions([])
+        }
+    }, [searchTerm, participants])
+
+    const handleSelectParticipant = (participant: Participant) => {
+        setSelectedParticipant(participant)
+        setSearchTerm('')
+        setSuggestions([])
     }
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-gradient-to-br from-blue-600 to-red-500 border-none text-white sm:max-w-[425px]">
+            <DialogContent className="bg-gradient-to-br from-green-600 to-blue-900 border-none text-white sm:max-w-[425px] rounded-3xl overflow-hidden">
                 <DialogHeader>
-                    <DialogTitle className="text-2xl font-bold text-center">Buscar Número de Sorteo</DialogTitle>
+                    <DialogTitle className="text-3xl font-bold text-center mb-6">Buscar Número de Sorteo</DialogTitle>
                 </DialogHeader>
-                <div className="mt-4">
+                <div className="relative">
                     <Input
-                        placeholder="Ingrese su cédula o nombre completo"
+                        placeholder="Ingrese número de cédula o nombre"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-full py-6 pl-12 pr-4 text-lg"
                     />
-                    <Button
-                        onClick={handleSearch}
-                        className="w-full mt-4 bg-white text-blue-600 hover:bg-white/90 transition-colors duration-200"
-                        disabled={isSearching}
-                    >
-                        {isSearching ? 'Buscando...' : 'Buscar'}
-                        <Search className="ml-2 h-4 w-4" />
-                    </Button>
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/50 h-6 w-6" />
                 </div>
                 <AnimatePresence>
-                    {searchResult && (
+                    {suggestions.length > 0 && (
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            className="mt-6 p-4 bg-white/20 backdrop-blur-md rounded-lg"
+                            exit={{ opacity: 0, y: -10 }}
+                            className="mt-4 bg-white/10 rounded-2xl overflow-hidden"
                         >
-                            <h3 className="text-xl font-semibold mb-2">Resultado:</h3>
-                            <p className="mb-2"><strong>Nombre:</strong> {searchResult.name}</p>
-                            <p className="mb-2"><strong>Cédula:</strong> {searchResult.cedula}</p>
-                            <p className="text-2xl font-bold flex items-center">
-                                <Ticket className="mr-2 h-6 w-6" />
-                                Número de Sorteo: {searchResult.ticket_number}
-                            </p>
+                            {suggestions.map((participant) => (
+                                <motion.div
+                                    key={participant.id_participant}
+                                    whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                                    className="p-3 cursor-pointer transition-colors duration-200"
+                                    onClick={() => handleSelectParticipant(participant)}
+                                >
+                                    <p className="text-white font-semibold">{participant.name}</p>
+                                    <p className="text-white/70 text-sm">CC: {participant.cedula}</p>
+                                </motion.div>
+                            ))}
                         </motion.div>
                     )}
-                    {searchResult === null && searchTerm && !isSearching && (
-                        <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="mt-4 text-center text-red-200"
+                </AnimatePresence>
+                <AnimatePresence>
+                    {selectedParticipant && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            className="mt-6 bg-white/20 backdrop-blur-md rounded-3xl overflow-hidden"
                         >
-                            No se encontró ningún participante con esa información.
-                        </motion.p>
+                            <div className="p-6 space-y-4">
+                                <div className="flex items-center space-x-4">
+                                    <div className="bg-white/30 p-3 rounded-full">
+                                        <User className="h-8 w-8 text-white" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl font-bold">{selectedParticipant.name}</h3>
+                                        <p className="text-white/70">Participante</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center space-x-4">
+                                    <div className="bg-white/30 p-3 rounded-full">
+                                        <CreditCard className="h-6 w-6 text-white" />
+                                    </div>
+                                    <p className="text-xl"><span className="font-semibold">CC:</span> {selectedParticipant.cedula}</p>
+                                </div>
+                                <div className="flex items-center space-x-4">
+                                    <div className="bg-white/30 p-3 rounded-full">
+                                        <Ticket className="h-6 w-6 text-white" />
+                                    </div>
+                                    <p className="text-3xl font-bold">{selectedParticipant.ticket_number}</p>
+                                </div>
+                            </div>
+                            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 p-4 text-center">
+                                <p className="text-lg font-semibold">Número de Sorteo</p>
+                            </div>
+                        </motion.div>
                     )}
                 </AnimatePresence>
+                {!selectedParticipant && (
+                    <p className="text-center text-white/70 mt-4">
+                        Ingrese el número de cédula o nombre para buscar un participante
+                    </p>
+                )}
             </DialogContent>
         </Dialog>
     )
