@@ -6,10 +6,10 @@ interface ErrorModalProps {
     onOpenChange: (open: boolean) => void
     existingParticipant: {
         cedula: string
-        number: string
+        ticket_number: string
         name: string
     } | null
-    field: 'cedula' | 'number' | 'name'
+    field: 'cedula' | 'ticket_number' | 'name'
 }
 
 export function ErrorModal({ open, onOpenChange, existingParticipant, field }: ErrorModalProps) {
@@ -17,7 +17,7 @@ export function ErrorModal({ open, onOpenChange, existingParticipant, field }: E
 
     const fieldNames = {
         cedula: 'cédula',
-        number: 'número de sorteo',
+        ticket_number: 'número de sorteo',
         name: 'nombre'
     }
 
@@ -43,7 +43,7 @@ export function ErrorModal({ open, onOpenChange, existingParticipant, field }: E
                     </p>
                     <div className="bg-white/10 rounded-lg p-4 text-left">
                         <p className="mb-2"><strong>Cédula:</strong> {existingParticipant.cedula}</p>
-                        <p className="mb-2"><strong>Número de Sorteo:</strong> {existingParticipant.number}</p>
+                        <p className="mb-2"><strong>Número de Sorteo:</strong> {existingParticipant.ticket_number}</p>
                         <p><strong>Nombre:</strong> {existingParticipant.name}</p>
                     </div>
                     <p className="text-sm opacity-90 mt-4">

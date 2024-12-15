@@ -9,19 +9,45 @@ import {
 } from '@/components/ui/table'
 
 interface Winner {
-    id: number
-    participantName: string
-    prizeName: string
-    drawDate: string
+    id_winner: number;
+    id_prize: number;
+    id_participant: number;
+    drawDate: string;
 }
 
-const WinnerManagement = () => {
+interface Prize {
+    id_prize: number;
+    name: string;
+}
+
+interface Participant {
+    id_participant: number;
+    name: string;
+}
+
+export default function WinnerManagement() {
     const [winners, setWinners] = useState<Winner[]>([])
+    const [prizes, setPrizes] = useState<Prize[]>([])
+    const [participants, setParticipants] = useState<Participant[]>([])
 
     useEffect(() => {
         const storedWinners = JSON.parse(localStorage.getItem('winners') || '[]')
+        const storedPrizes = JSON.parse(localStorage.getItem('prizes') || '[]')
+        const storedParticipants = JSON.parse(localStorage.getItem('participants') || '[]')
         setWinners(storedWinners)
+        setPrizes(storedPrizes)
+        setParticipants(storedParticipants)
     }, [])
+
+    const getPrizeName = (id_prize: number) => {
+        const prize = prizes.find(p => p.id_prize === id_prize)
+        return prize ? prize.name : 'Unknown Prize'
+    }
+
+    const getParticipantName = (id_participant: number) => {
+        const participant = participants.find(p => p.id_participant === id_participant)
+        return participant ? participant.name : 'Unknown Participant'
+    }
 
     return (
         <div className="space-y-8 bg-white p-8 rounded-lg shadow-xl">
@@ -32,7 +58,7 @@ const WinnerManagement = () => {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>ID</TableHead>
+                            <TableHead>ID Ganador</TableHead>
                             <TableHead>Nombre del Ganador</TableHead>
                             <TableHead>Premio</TableHead>
                             <TableHead>Fecha del Sorteo</TableHead>
@@ -40,11 +66,11 @@ const WinnerManagement = () => {
                     </TableHeader>
                     <TableBody>
                         {winners.map((winner) => (
-                            <TableRow key={winner.id} className="hover:bg-yellow-100 transition-colors duration-200">
-                                <TableCell>{winner.id}</TableCell>
-                                <TableCell className="font-semibold">{winner.participantName}</TableCell>
-                                <TableCell>{winner.prizeName}</TableCell>
-                                <TableCell>{winner.drawDate}</TableCell>
+                            <TableRow key={winner.id_winner} className="hover:bg-yellow-100 transition-colors duration-200">
+                                <TableCell>{winner.id_winner}</TableCell>
+                                <TableCell className="font-semibold">{getParticipantName(winner.id_participant)}</TableCell>
+                                <TableCell>{getPrizeName(winner.id_prize)}</TableCell>
+                                <TableCell>{new Date(winner.drawDate).toLocaleDateString()}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -53,6 +79,4 @@ const WinnerManagement = () => {
         </div>
     )
 }
-
-export default WinnerManagement
 

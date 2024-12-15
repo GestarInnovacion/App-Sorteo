@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Ticket } from 'lucide-react'
+import { Participant } from '../types'
 
 interface LookupModalProps {
     isOpen: boolean
@@ -12,17 +13,17 @@ interface LookupModalProps {
 
 export function LookupModal({ isOpen, onOpenChange }: LookupModalProps) {
     const [searchTerm, setSearchTerm] = useState('')
-    const [searchResult, setSearchResult] = useState<{ number: string; name: string } | null>(null)
+    const [searchResult, setSearchResult] = useState<Participant | null>(null)
     const [isSearching, setIsSearching] = useState(false)
 
     const handleSearch = () => {
         setIsSearching(true)
         setTimeout(() => {
-            const participants = JSON.parse(localStorage.getItem('participants') || '[]')
-            const found = participants.find((p: any) =>
+            const participants = JSON.parse(localStorage.getItem('participants') || '[]') as Participant[]
+            const found = participants.find((p) =>
                 p.cedula === searchTerm || p.name.toLowerCase() === searchTerm.toLowerCase()
             )
-            setSearchResult(found ? { number: found.number, name: found.name } : null)
+            setSearchResult(found || null)
             setIsSearching(false)
         }, 1000) // Simulating a delay for the search
     }
@@ -59,9 +60,10 @@ export function LookupModal({ isOpen, onOpenChange }: LookupModalProps) {
                         >
                             <h3 className="text-xl font-semibold mb-2">Resultado:</h3>
                             <p className="mb-2"><strong>Nombre:</strong> {searchResult.name}</p>
+                            <p className="mb-2"><strong>Cédula:</strong> {searchResult.cedula}</p>
                             <p className="text-2xl font-bold flex items-center">
                                 <Ticket className="mr-2 h-6 w-6" />
-                                Número de Sorteo: {searchResult.number}
+                                Número de Sorteo: {searchResult.ticket_number}
                             </p>
                         </motion.div>
                     )}

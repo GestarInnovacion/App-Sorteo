@@ -5,11 +5,20 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Gift, PlusCircle } from 'lucide-react'
+import { Prize } from '../types';
+
+//interface Prize {
+//  id_prize: number;
+//  name: string;
+//  range_start: number;
+//  range_end: number;
+//  sorteado: boolean;
+//}
 
 interface AddPrizeModalProps {
     isOpen: boolean
     onOpenChange: (open: boolean) => void
-    onAddPrize: (prize: { name: string; range_start: number; range_end: number }) => void
+    onAddPrize: (prize: Omit<Prize, 'id_prize' | 'sorteado'>) => void;
 }
 
 export function AddPrizeModal({ isOpen, onOpenChange, onAddPrize }: AddPrizeModalProps) {

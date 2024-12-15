@@ -13,16 +13,16 @@ import {
 import { useToast } from '@/hooks/use-toast'
 
 interface Participant {
-    id: number
-    cedula: string
-    number: string
-    name: string
-    active: boolean
+    id_participant: number;
+    cedula: string;
+    ticket_number: string;
+    name: string;
+    active: boolean;
 }
 
-const ParticipantManagement = () => {
+export default function ParticipantManagement() {
     const [participants, setParticipants] = useState<Participant[]>([])
-    const [newParticipant, setNewParticipant] = useState({ cedula: '', number: '', name: '' })
+    const [newParticipant, setNewParticipant] = useState({ cedula: '', ticket_number: '', name: '' })
     const { toast } = useToast()
 
     useEffect(() => {
@@ -36,22 +36,24 @@ const ParticipantManagement = () => {
 
     const handleAddParticipant = () => {
         const participant: Participant = {
-            id: participants.length + 1,
-            ...newParticipant,
+            id_participant: participants.length + 1,
+            cedula: newParticipant.cedula,
+            ticket_number: newParticipant.ticket_number,
+            name: newParticipant.name,
             active: true
         }
         const updatedParticipants = [...participants, participant]
         setParticipants(updatedParticipants)
         localStorage.setItem('participants', JSON.stringify(updatedParticipants))
-        setNewParticipant({ cedula: '', number: '', name: '' })
+        setNewParticipant({ cedula: '', ticket_number: '', name: '' })
         toast({
             title: "Participante añadido",
             description: "El participante ha sido agregado exitosamente.",
         })
     }
 
-    const handleDeleteParticipant = (id: number) => {
-        const updatedParticipants = participants.filter(participant => participant.id !== id)
+    const handleDeleteParticipant = (id_participant: number) => {
+        const updatedParticipants = participants.filter(participant => participant.id_participant !== id_participant)
         setParticipants(updatedParticipants)
         localStorage.setItem('participants', JSON.stringify(updatedParticipants))
         toast({
@@ -78,11 +80,11 @@ const ParticipantManagement = () => {
                 if (typeof csv === 'string') {
                     const lines = csv.split('\n')
                     const newParticipants: Participant[] = lines.slice(1).map((line, index) => {
-                        const [cedula, number, name] = line.split(',')
+                        const [cedula, ticket_number, name] = line.split(',')
                         return {
-                            id: participants.length + index + 1,
+                            id_participant: participants.length + index + 1,
                             cedula: cedula.trim(),
-                            number: number.trim(),
+                            ticket_number: ticket_number.trim(),
                             name: name.trim(),
                             active: true
                         }
@@ -112,8 +114,8 @@ const ParticipantManagement = () => {
                     <Input id="cedula" name="cedula" value={newParticipant.cedula} onChange={handleInputChange} className="border-2 border-purple-300 focus:border-purple-500" />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="number" className="text-lg">Número de Teléfono</Label>
-                    <Input id="number" name="number" value={newParticipant.number} onChange={handleInputChange} className="border-2 border-purple-300 focus:border-purple-500" />
+                    <Label htmlFor="ticket_number" className="text-lg">Número de Teléfono</Label>
+                    <Input id="ticket_number" name="ticket_number" value={newParticipant.ticket_number} onChange={handleInputChange} className="border-2 border-purple-300 focus:border-purple-500" />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="name" className="text-lg">Nombre Completo</Label>
@@ -141,9 +143,9 @@ const ParticipantManagement = () => {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>ID</TableHead>
+                        <TableHead>ID Participante</TableHead>
                         <TableHead>Cédula</TableHead>
-                        <TableHead>Número</TableHead>
+                        <TableHead>Número de Ticket</TableHead>
                         <TableHead>Nombre</TableHead>
                         <TableHead>Activo</TableHead>
                         <TableHead>Acciones</TableHead>
@@ -151,14 +153,14 @@ const ParticipantManagement = () => {
                 </TableHeader>
                 <TableBody>
                     {participants.map((participant) => (
-                        <TableRow key={participant.id}>
-                            <TableCell>{participant.id}</TableCell>
+                        <TableRow key={participant.id_participant}>
+                            <TableCell>{participant.id_participant}</TableCell>
                             <TableCell>{participant.cedula}</TableCell>
-                            <TableCell>{participant.number}</TableCell>
+                            <TableCell>{participant.ticket_number}</TableCell>
                             <TableCell>{participant.name}</TableCell>
                             <TableCell>{participant.active ? 'Sí' : 'No'}</TableCell>
                             <TableCell>
-                                <Button variant="destructive" onClick={() => handleDeleteParticipant(participant.id)} className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded-full transition-all duration-200 transform hover:scale-105">
+                                <Button variant="destructive" onClick={() => handleDeleteParticipant(participant.id_participant)} className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded-full transition-all duration-200 transform hover:scale-105">
                                     Eliminar
                                 </Button>
                             </TableCell>
@@ -169,6 +171,3 @@ const ParticipantManagement = () => {
         </div>
     )
 }
-
-export default ParticipantManagement
-
