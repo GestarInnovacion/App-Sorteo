@@ -4,26 +4,26 @@ import { useToast } from '@/hooks/use-toast'
 import confetti from 'canvas-confetti'
 
 interface Prize {
-    id: number
-    name: string
-    range_start: number
-    range_end: number
-    sorteado: boolean
+    id_prize: number;
+    name: string;
+    range_start: number;
+    range_end: number;
+    sorteado: boolean;
 }
 
 interface Participant {
-    id: number
-    cedula: string
-    number: string
-    name: string
-    active: boolean
+    id_participant: number;
+    name: string;
+    cedula: string;
+    ticket_number: string;
+    active: boolean;
 }
 
 interface Winner {
-    id: number
-    participantName: string
-    prizeName: string
-    drawDate: string
+    id_winner: number;
+    id_prize: number;
+    id_participant: number;
+    drawDate: string;
 }
 
 const DrawSystem = () => {
@@ -48,35 +48,35 @@ const DrawSystem = () => {
             return
         }
 
-        const randomPrizeIndex = Math.floor(Math.random() * availablePrizes.length)
-        const selectedPrize = availablePrizes[randomPrizeIndex]
+        const randomPrizeIndex = Math.floor(Math.random() * availablePrizes.length);
+        const selectedPrize = availablePrizes[randomPrizeIndex];
 
-        const randomParticipantIndex = Math.floor(Math.random() * activeParticipants.length)
-        const selectedParticipant = activeParticipants[randomParticipantIndex]
+        const randomParticipantIndex = Math.floor(Math.random() * activeParticipants.length);
+        const selectedParticipant = activeParticipants[randomParticipantIndex];
 
         const newWinner: Winner = {
-            id: Date.now(),
-            participantName: selectedParticipant.name,
-            prizeName: selectedPrize.name,
-            drawDate: new Date().toLocaleString()
-        }
+            id_winner: Date.now(),
+            id_prize: selectedPrize.id_prize,
+            id_participant: selectedParticipant.id_participant,
+            drawDate: new Date().toISOString()
+        };
 
         // Update local storage
         const updatedPrizes = availablePrizes.map(prize =>
-            prize.id === selectedPrize.id ? { ...prize, sorteado: true } : prize
-        )
+            prize.id_prize === selectedPrize.id_prize ? { ...prize, sorteado: true } : prize
+        );
         const updatedParticipants = activeParticipants.map(participant =>
-            participant.id === selectedParticipant.id ? { ...participant, active: false } : participant
-        )
-        const updatedWinners = [...JSON.parse(localStorage.getItem('winners') || '[]'), newWinner]
+            participant.id_participant === selectedParticipant.id_participant ? { ...participant, active: false } : participant
+        );
+        const updatedWinners = [...JSON.parse(localStorage.getItem('winners') || '[]'), newWinner];
 
-        localStorage.setItem('prizes', JSON.stringify(updatedPrizes))
-        localStorage.setItem('participants', JSON.stringify(updatedParticipants))
-        localStorage.setItem('winners', JSON.stringify(updatedWinners))
+        localStorage.setItem('prizes', JSON.stringify(updatedPrizes));
+        localStorage.setItem('participants', JSON.stringify(updatedParticipants));
+        localStorage.setItem('winners', JSON.stringify(updatedWinners));
 
         // Update state
-        setAvailablePrizes(updatedPrizes.filter(prize => !prize.sorteado))
-        setActiveParticipants(updatedParticipants.filter(participant => participant.active))
+        setAvailablePrizes(updatedPrizes.filter(prize => !prize.sorteado));
+        setActiveParticipants(updatedParticipants.filter(participant => participant.active));
 
         // Show success message and launch confetti
         toast({
@@ -109,7 +109,7 @@ const DrawSystem = () => {
                 ) : (
                     <ul className="list-disc pl-5 space-y-2">
                         {availablePrizes.map(prize => (
-                            <li key={prize.id} className="text-lg">{prize.name}</li>
+                            <li key={prize.id_prize} className="text-lg">{prize.name}</li>
                         ))}
                     </ul>
                 )}

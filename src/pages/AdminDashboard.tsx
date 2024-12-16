@@ -11,31 +11,9 @@ import { EditPrizeModal } from '@/components/EditPrizeModal'
 import { Card, CardContent } from '@/components/ui/card'
 import { DrawingModal } from '@/components/DrawingModal'
 import { WinnerModal } from '@/components/WinnerModal'
+import { PrizeCard } from '@/components/PrizeCard'
 import { DrawSection } from '@/components/DrawSection'
-
-interface Prize {
-    id: number;
-    name: string;
-    range_start: number;
-    range_end: number;
-    sorteado: boolean;
-}
-
-interface Participant {
-    id: number;
-    cedula: string;
-    number: string;
-    name: string;
-    active: boolean;
-}
-
-interface Winner {
-    id: number;
-    prize: string;
-    participant_number: string;
-    participant_name: string;
-    drawDate: string;
-}
+import { Prize, Participant, Winner } from '../types';
 
 const AdminDashboard = () => {
     const [prizes, setPrizes] = useState<Prize[]>([])
@@ -62,9 +40,9 @@ const AdminDashboard = () => {
         setWinners(storedWinners)
     }, [])
 
-    const handleAddPrize = (newPrize: Omit<Prize, 'id' | 'sorteado'>) => {
+    const handleAddPrize = (newPrize: Omit<Prize, 'id_prize' | 'sorteado'>) => {
         const prize: Prize = {
-            id: prizes.length + 1,
+            id_prize: prizes.length + 1,
             ...newPrize,
             sorteado: false
         }
@@ -86,7 +64,7 @@ const AdminDashboard = () => {
             const newPrizes: Prize[] = rows.map((row, index) => {
                 const [name, range_start, range_end] = row.split(';').map(field => field.trim())
                 return {
-                    id: prizes.length + index + 1,
+                    id_prize: prizes.length + index + 1,
                     name,
                     range_start: parseInt(range_start),
                     range_end: parseInt(range_end),
@@ -126,7 +104,7 @@ const AdminDashboard = () => {
     }
 
     const handleDeletePrize = (prizeId: number) => {
-        const updatedPrizes = prizes.filter(prize => prize.id !== prizeId);
+        const updatedPrizes = prizes.filter(prize => prize.id_prize !== prizeId);
         setPrizes(updatedPrizes);
         localStorage.setItem('prizes', JSON.stringify(updatedPrizes));
         toast({
@@ -137,7 +115,7 @@ const AdminDashboard = () => {
     };
 
     const handleDeleteParticipant = (participantId: number) => {
-        const updatedParticipants = participants.filter(participant => participant.id !== participantId);
+        const updatedParticipants = participants.filter(participant => participant.id_participant !== participantId);
         setParticipants(updatedParticipants);
         localStorage.setItem('participants', JSON.stringify(updatedParticipants));
         toast({
@@ -151,12 +129,12 @@ const AdminDashboard = () => {
         setSelectedPrize(prize);
         setShowDrawingModal(true);
 
-        // Simular el proceso de sorteo
+        // Simulate the drawing process
         setTimeout(() => {
             setShowDrawingModal(false);
 
             const availableParticipants = participants.filter(p =>
-                p.active && parseInt(p.number) >= prize.range_start && parseInt(p.number) <= prize.range_end
+                p.active && parseInt(p.ticket_number) >= prize.range_start && parseInt(p.ticket_number) <= prize.range_end
             );
 
             if (availableParticipants.length === 0) {
@@ -172,21 +150,23 @@ const AdminDashboard = () => {
             const selectedParticipant = availableParticipants[randomParticipantIndex];
 
             const newWinner: Winner = {
-                id: Date.now(),
-                prize: prize.name,
-                participant_number: selectedParticipant.number,
+                id_winner: winners.length + 1,
+                id_prize: prize.id_prize,
+                id_participant: selectedParticipant.id_participant,
+                drawDate: new Date().toISOString(),
                 participant_name: selectedParticipant.name,
-                drawDate: new Date().toLocaleString()
+                participant_number: selectedParticipant.ticket_number,
+                prize_name: prize.name
             };
 
             setCurrentWinner(newWinner);
             setShowWinnerModal(true);
 
             const updatedPrizes = prizes.map(p =>
-                p.id === prize.id ? { ...p, sorteado: true } : p
+                p.id_prize === prize.id_prize ? { ...p, sorteado: true } : p
             );
             const updatedParticipants = participants.map(p =>
-                p.id === selectedParticipant.id ? { ...p, active: false } : p
+                p.id_participant === selectedParticipant.id_participant ? { ...p, active: false } : p
             );
             const updatedWinners = [...winners, newWinner];
 
@@ -208,7 +188,7 @@ const AdminDashboard = () => {
 
     const handleSaveEditedPrize = (editedPrize: Prize) => {
         const updatedPrizes = prizes.map(prize =>
-            prize.id === editedPrize.id ? editedPrize : prize
+            prize.id_prize === editedPrize.id_prize ? editedPrize : prize
         )
         setPrizes(updatedPrizes)
         localStorage.setItem('prizes', JSON.stringify(updatedPrizes))
@@ -457,10 +437,10 @@ const AdminDashboard = () => {
                             ) : (
                                 <div className="space-y-4">
                                     {winners.map((winner) => (
-                                        <Card key={winner.id} className="bg-white/5 border-white/10 rounded-2xl overflow-hidden">
+                                        <Card key={winner.id_winner} className="bg-white/5 border-white/10 rounded-2xl overflow-hidden">
                                             <CardContent className="p-4">
-                                                <p className="font-semibold text-white text-lg">{winner.participant_name}</p>
-                                                <p className="text-white/80 text-sm mt-1">Premio: {winner.prize}</p>
+                                                <p className="font-semibold text-white text-lg">{participants.find(p => p.id_participant === winner.id_participant)?.name}</p>
+                                                <p className="text-white/80 text-sm mt-1">Premio: {prizes.find(p => p.id_prize === winner.id_prize)?.name}</p>
                                                 <p className="text-white/60 text-xs mt-1">Fecha: {winner.drawDate}</p>
                                             </CardContent>
                                         </Card>
@@ -507,7 +487,7 @@ const AdminDashboard = () => {
             <EditPrizeModal
                 isOpen={showEditPrizeModal}
                 onOpenChange={setShowEditPrizeModal}
-                prize={selectedPrize}
+                prize={selectedPrize as Prize}
                 onEditPrize={handleSaveEditedPrize}
             />
 

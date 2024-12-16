@@ -8,10 +8,12 @@ import { useNavigate } from 'react-router-dom'
 import { SuccessModal } from '@/components/SuccessModal'
 import { ErrorModal } from '@/components/ErrorModal'
 import { LookupModal } from '@/components/LookupModal'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { Participant } from '../types'
 
 interface FormData {
     cedula: string
-    number: string
+    ticket_number: string
     name: string
 }
 
@@ -19,14 +21,14 @@ const ParticipantPage = () => {
     const [step, setStep] = useState(1)
     const [formData, setFormData] = useState<FormData>({
         cedula: '',
-        number: '',
+        ticket_number: '',
         name: '',
     })
     const [showSuccessModal, setShowSuccessModal] = useState(false)
     const [showErrorModal, setShowErrorModal] = useState(false)
     const [showLookupModal, setShowLookupModal] = useState(false)
     const [existingParticipant, setExistingParticipant] = useState<FormData | null>(null)
-    const [errorField, setErrorField] = useState<'cedula' | 'number' | 'name'>('cedula')
+    const [errorField, setErrorField] = useState<'cedula' | 'ticket_number' | 'name'>('cedula')
     const { toast } = useToast()
     const navigate = useNavigate()
 
@@ -34,9 +36,9 @@ const ParticipantPage = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value })
     }
 
-    const checkExistingParticipant = (field: 'cedula' | 'number' | 'name', value: string) => {
-        const participants = JSON.parse(localStorage.getItem('participants') || '[]')
-        return participants.find((p: any) => p[field] === value)
+    const checkExistingParticipant = (field: keyof FormData, value: string) => {
+        const participants = JSON.parse(localStorage.getItem('participants') || '[]') as Participant[]
+        return participants.find((p) => p[field] === value)
     }
 
     const handleNext = () => {
@@ -59,7 +61,7 @@ const ParticipantPage = () => {
             }
         }
 
-        if (step === 2 && !formData.number) {
+        if (step === 2 && !formData.ticket_number) {
             toast({
                 title: "Campo requerido",
                 description: "Por favor ingrese su número de sorteo",
@@ -68,10 +70,10 @@ const ParticipantPage = () => {
             return
         }
         if (step === 2) {
-            const existing = checkExistingParticipant('number', formData.number)
+            const existing = checkExistingParticipant('ticket_number', formData.ticket_number)
             if (existing) {
                 setExistingParticipant(existing)
-                setErrorField('number')
+                setErrorField('ticket_number')
                 setShowErrorModal(true)
                 return
             }
@@ -93,9 +95,9 @@ const ParticipantPage = () => {
                 return
             }
 
-            const participants = JSON.parse(localStorage.getItem('participants') || '[]')
-            const newParticipant = {
-                id: participants.length + 1,
+            const participants = JSON.parse(localStorage.getItem('participants') || '[]') as Participant[]
+            const newParticipant: Participant = {
+                id_participant: participants.length + 1,
                 ...formData,
                 active: true
             }
@@ -143,8 +145,8 @@ const ParticipantPage = () => {
                             Ingresa tu Número de Sorteo
                         </h2>
                         <Input
-                            name="number"
-                            value={formData.number}
+                            name="ticket_number"
+                            value={formData.ticket_number}
                             onChange={handleChange}
                             placeholder="Ingrese su número de sorteo"
                             className="bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl py-6 text-lg"
@@ -250,29 +252,44 @@ const ParticipantPage = () => {
                 </motion.div>
             </div>
 
-            <SuccessModal
-                open={showSuccessModal}
-                onOpenChange={(open) => {
-                    setShowSuccessModal(open)
-                    if (!open) {
-                        navigate('/')
-                    }
-                }}
-                participantName={formData.name}
-                participantNumber={formData.number}
-            />
+            <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+                <DialogContent>
+                    <DialogTitle>Registro Exitoso</DialogTitle>
+                    <SuccessModal
+                        open={showSuccessModal}
+                        participantName={formData.name}
+                        participantNumber={formData.ticket_number}
+                        onOpenChange={(open) => {
+                            setShowSuccessModal(open)
+                            if (!open) {
+                                navigate('/')
+                            }
+                        }}
+                    />
+                </DialogContent>
+            </Dialog>
 
-            <ErrorModal
-                open={showErrorModal}
-                onOpenChange={setShowErrorModal}
-                existingParticipant={existingParticipant}
-                field={errorField}
-            />
+            <Dialog open={showErrorModal} onOpenChange={setShowErrorModal}>
+                <DialogContent>
+                    <DialogTitle>Error de Registro</DialogTitle>
+                    <ErrorModal
+                        open={showErrorModal}
+                        existingParticipant={existingParticipant}
+                        field={errorField}
+                        onOpenChange={setShowErrorModal}
+                    />
+                </DialogContent>
+            </Dialog>
 
-            <LookupModal
-                isOpen={showLookupModal}
-                onOpenChange={setShowLookupModal}
-            />
+            <Dialog open={showLookupModal} onOpenChange={setShowLookupModal}>
+                <DialogContent>
+                    <DialogTitle>Buscar Número de Sorteo</DialogTitle>
+                    <LookupModal
+                        isOpen={showLookupModal}
+                        onOpenChange={setShowLookupModal}
+                    />
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

@@ -5,20 +5,21 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Gift, Save } from 'lucide-react'
+import { Prize } from '../types';
+
+// interface Prize {
+//   id_prize: number;
+//   name: string;
+//   range_start: number;
+//   range_end: number;
+//   sorteado: boolean;
+// }
 
 interface EditPrizeModalProps {
-    isOpen: boolean
-    onOpenChange: (open: boolean) => void
-    prize: Prize | null
-    onEditPrize: (prize: Prize) => void
-}
-
-interface Prize {
-    id: number
-    name: string
-    range_start: number
-    range_end: number
-    sorteado: boolean
+    isOpen: boolean;
+    onOpenChange: (open: boolean) => void;
+    prize: Prize | null;
+    onEditPrize: (prize: Prize) => void;
 }
 
 export function EditPrizeModal({ isOpen, onOpenChange, prize, onEditPrize }: EditPrizeModalProps) {

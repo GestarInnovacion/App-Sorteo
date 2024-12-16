@@ -13,14 +13,14 @@ import {
 import { useToast } from '@/hooks/use-toast'
 
 interface Prize {
-    id: number
-    name: string
-    range_start: number
-    range_end: number
-    sorteado: boolean
+    id_prize: number;
+    name: string;
+    range_start: number;
+    range_end: number;
+    sorteado: boolean;
 }
 
-const PrizeManagement = () => {
+export default function PrizeManagement() {
     const [prizes, setPrizes] = useState<Prize[]>([])
     const [newPrize, setNewPrize] = useState({ name: '', range_start: '', range_end: '' })
     const { toast } = useToast()
@@ -36,7 +36,7 @@ const PrizeManagement = () => {
 
     const handleAddPrize = () => {
         const prize: Prize = {
-            id: prizes.length + 1,
+            id_prize: prizes.length + 1,
             name: newPrize.name,
             range_start: parseInt(newPrize.range_start),
             range_end: parseInt(newPrize.range_end),
@@ -52,8 +52,8 @@ const PrizeManagement = () => {
         })
     }
 
-    const handleDeletePrize = (id: number) => {
-        const updatedPrizes = prizes.filter(prize => prize.id !== id)
+    const handleDeletePrize = (id_prize: number) => {
+        const updatedPrizes = prizes.filter(prize => prize.id_prize !== id_prize)
         setPrizes(updatedPrizes)
         localStorage.setItem('prizes', JSON.stringify(updatedPrizes))
         toast({
@@ -73,7 +73,7 @@ const PrizeManagement = () => {
                     const newPrizes: Prize[] = lines.slice(1).map((line, index) => {
                         const [name, range_start, range_end] = line.split(',')
                         return {
-                            id: prizes.length + index + 1,
+                            id_prize: prizes.length + index + 1,
                             name: name.trim(),
                             range_start: parseInt(range_start.trim()),
                             range_end: parseInt(range_end.trim()),
@@ -122,7 +122,7 @@ const PrizeManagement = () => {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>ID</TableHead>
+                        <TableHead>ID Premio</TableHead>
                         <TableHead>Nombre del Premio</TableHead>
                         <TableHead>Rango Inicial</TableHead>
                         <TableHead>Rango Final</TableHead>
@@ -132,14 +132,14 @@ const PrizeManagement = () => {
                 </TableHeader>
                 <TableBody>
                     {prizes.map((prize) => (
-                        <TableRow key={prize.id}>
-                            <TableCell>{prize.id}</TableCell>
+                        <TableRow key={prize.id_prize}>
+                            <TableCell>{prize.id_prize}</TableCell>
                             <TableCell>{prize.name}</TableCell>
                             <TableCell>{prize.range_start}</TableCell>
                             <TableCell>{prize.range_end}</TableCell>
                             <TableCell>{prize.sorteado ? 'Sí' : 'No'}</TableCell>
                             <TableCell>
-                                <Button variant="destructive" onClick={() => handleDeletePrize(prize.id)} className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded-full transition-all duration-200 transform hover:scale-105">
+                                <Button variant="destructive" onClick={() => handleDeletePrize(prize.id_prize)} className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded-full transition-all duration-200 transform hover:scale-105">
                                     Eliminar
                                 </Button>
                             </TableCell>
@@ -150,6 +150,4 @@ const PrizeManagement = () => {
         </div>
     )
 }
-
-export default PrizeManagement
 

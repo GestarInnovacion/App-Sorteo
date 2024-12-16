@@ -1,19 +1,25 @@
 import { motion } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
 import { Flame, Star } from 'lucide-react'
+import { Prize } from '../types';
+
+// interface Prize {
+//   id_prize: number;
+//   name: string;
+//   range_start: number;
+//   range_end: number;
+//   sorteado: boolean;
+// }
 
 interface PrizeCardProps {
-    prize: {
-        id: number
-        name: string
-        range_start: number
-        range_end: number
-    }
+    prize: Prize
     onClick: () => void
 }
 
 export function PrizeCard({ prize, onClick }: PrizeCardProps) {
     // Calcular la intensidad del verde basado en el rango final
+    const maxRange = 1000 // Asumimos un rango máximo de 1000
+    const intensity = Math.min((prize.range_end / maxRange) * 100, 100)
 
     return (
         <motion.div

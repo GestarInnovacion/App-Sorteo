@@ -1,17 +1,10 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
-import { toast } from '@/hooks/use-toast'
+import { useToast } from '@/hooks/use-toast'
 import confetti from 'canvas-confetti'
 import { Star } from 'lucide-react'
-
-interface Prize {
-    id: number
-    name: string
-    range_start: number
-    range_end: number
-    sorteado: boolean
-}
+import { Prize } from '../types';
 
 interface DrawSectionProps {
     prizes: Prize[]
@@ -20,17 +13,7 @@ interface DrawSectionProps {
 
 export function DrawSection({ prizes, onSelectPrize }: DrawSectionProps) {
     const [, setSelectedPrize] = useState<Prize | null>(null)
-    // Eliminar estas líneas
-    // const [countdown, setCountdown] = useState<number | null>(null)
-
-    // useEffect(() => {
-    //     if (countdown !== null && countdown > 0) {
-    //         const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
-    //         return () => clearTimeout(timer)
-    //     } else if (countdown === 0) {
-    //         handleDrawComplete()
-    //     }
-    // }, [countdown])
+    const { toast } = useToast()
 
     const handleSelectPrize = (prize: Prize) => {
         setSelectedPrize(prize)
@@ -49,25 +32,6 @@ export function DrawSection({ prizes, onSelectPrize }: DrawSectionProps) {
         })
         setSelectedPrize(null)
     }
-
-    // Eliminar la función handleDrawComplete ya que ya no es necesaria.
-    // const handleDrawComplete = () => {
-    //     if (selectedPrize) {
-    //         onSelectPrize(selectedPrize)
-    //         confetti({
-    //             particleCount: 100,
-    //             spread: 70,
-    //             origin: { y: 0.6 }
-    //         })
-    //         playSound('win')
-    //         toast({
-    //             title: "¡Sorteo Realizado!",
-    //             description: `Se ha sorteado el premio: ${selectedPrize.name}`,
-    //             variant: "success",
-    //         })
-    //     }
-    //     setSelectedPrize(null)
-    // }
 
     const playSound = (type: 'start' | 'win') => {
         const audio = new Audio(type === 'start' ? '/sounds/countdown.mp3' : '/sounds/winner.mp3')
@@ -110,7 +74,7 @@ export function DrawSection({ prizes, onSelectPrize }: DrawSectionProps) {
                     <AnimatePresence>
                         {prizes.filter(p => !p.sorteado).map((prize) => (
                             <motion.div
-                                key={prize.id}
+                                key={prize.id_prize}
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.8 }}
@@ -156,27 +120,6 @@ export function DrawSection({ prizes, onSelectPrize }: DrawSectionProps) {
                     </AnimatePresence>
                 </div>
             </div>
-
-            {/* Eliminar todo este bloque */}
-            {/* <AnimatePresence>
-                {countdown !== null && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.5 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.5 }}
-                        className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50"
-                    >
-                        <motion.div
-                            className="text-9xl font-bold text-white"
-                            initial={{ scale: 2 }}
-                            animate={{ scale: 1 }}
-                            transition={{ duration: 0.5 }}
-                        >
-                            {countdown}
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence> */}
         </div>
     )
 }
