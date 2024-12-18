@@ -61,7 +61,7 @@ const HomePage = () => {
 
                     <div className="rounded-2xl bg-white/10 backdrop-blur-lg border border-white/20 p-8 shadow-2xl">
                         <h1 className="text-4xl font-bold text-center text-white mb-2">
-                            Sorteo Nuevo Hundred
+                            ¡Bienvenido a la Fiesta de Fin de año!
                         </h1>
                         <p className="text-center text-white/80 mb-8">
                             Seleccione su rol para continuar
