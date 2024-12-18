@@ -1,5 +1,5 @@
 export interface Prize {
-  id_prize: number;
+  id_prize?: number;
   name: string;
   range_start: number;
   range_end: number;
@@ -17,12 +17,12 @@ export interface Participant {
 export type PrizeOrParticipant = Prize | Participant;
 
 export interface Winner {
-  id_winner: number;
+  id_winner?: number;
   id_prize: number;
   id_participant: number;
   drawDate: string;
-  participant_name: string;
-  participant_number: string;
-  prize_name: string;
+  participant_name?: string;
+  ticket_number?: string;
+  prize_name?: string;
 }
 

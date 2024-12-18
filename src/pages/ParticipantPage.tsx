@@ -11,10 +11,15 @@ import { LookupModal } from '@/components/LookupModal'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Participant } from '../types'
 
+import { request } from '@/services/index'
+import { URL_PARTICIPANT } from '@/constants/index'
+
+
 interface FormData {
     cedula: string
     ticket_number: string
     name: string
+    active:boolean
 }
 
 const ParticipantPage = () => {
@@ -23,6 +28,7 @@ const ParticipantPage = () => {
         cedula: '',
         ticket_number: '',
         name: '',
+        active: true,
     })
     const [showSuccessModal, setShowSuccessModal] = useState(false)
     const [showErrorModal, setShowErrorModal] = useState(false)
@@ -36,12 +42,13 @@ const ParticipantPage = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value })
     }
 
-    const checkExistingParticipant = (field: keyof FormData, value: string) => {
-        const participants = JSON.parse(localStorage.getItem('participants') || '[]') as Participant[]
+    const checkExistingParticipant = async (field: keyof FormData, value: string) => {
+        const response =  await request(URL_PARTICIPANT, "GET")
+        const participants: Participant[] = response.data
         return participants.find((p) => p[field] === value)
     }
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (step === 1 && !formData.cedula) {
             toast({
                 title: "Campo requerido",
@@ -52,7 +59,7 @@ const ParticipantPage = () => {
         }
 
         if (step === 1) {
-            const existing = checkExistingParticipant('cedula', formData.cedula)
+            const existing = await checkExistingParticipant('cedula', formData.cedula)
             if (existing) {
                 setExistingParticipant(existing)
                 setErrorField('cedula')
@@ -70,7 +77,7 @@ const ParticipantPage = () => {
             return
         }
         if (step === 2) {
-            const existing = checkExistingParticipant('ticket_number', formData.ticket_number)
+            const existing = await checkExistingParticipant('ticket_number', formData.ticket_number)
             if (existing) {
                 setExistingParticipant(existing)
                 setErrorField('ticket_number')
@@ -87,23 +94,21 @@ const ParticipantPage = () => {
             return
         }
         if (step === 3) {
-            const existing = checkExistingParticipant('name', formData.name)
+            const existing = await checkExistingParticipant('name', formData.name)
             if (existing) {
                 setExistingParticipant(existing)
                 setErrorField('name')
                 setShowErrorModal(true)
                 return
             }
+            
+            formData.active = true
+            const response = await request(URL_PARTICIPANT, "POST", formData)
 
-            const participants = JSON.parse(localStorage.getItem('participants') || '[]') as Participant[]
-            const newParticipant: Participant = {
-                id_participant: participants.length + 1,
-                ...formData,
-                active: true
+            if (response.status_code === 200) {
+                setShowSuccessModal(true)
             }
-            participants.push(newParticipant)
-            localStorage.setItem('participants', JSON.stringify(participants))
-            setShowSuccessModal(true)
+
         } else {
             setStep(step + 1)
         }
