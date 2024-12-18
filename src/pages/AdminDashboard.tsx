@@ -11,9 +11,12 @@ import { EditPrizeModal } from '@/components/EditPrizeModal'
 import { Card, CardContent } from '@/components/ui/card'
 import { DrawingModal } from '@/components/DrawingModal'
 import { WinnerModal } from '@/components/WinnerModal'
-import { PrizeCard } from '@/components/PrizeCard'
 import { DrawSection } from '@/components/DrawSection'
 import { Prize, Participant, Winner } from '../types';
+
+import { request } from '@/services/index';
+import {URL_PARTICIPANT, URL_PRIZE, URL_WINNER } from '@/constants/index';
+
 
 const AdminDashboard = () => {
     const [prizes, setPrizes] = useState<Prize[]>([])
@@ -31,29 +34,50 @@ const AdminDashboard = () => {
     const navigate = useNavigate()
     const { toast } = useToast()
 
-    useEffect(() => {
-        const storedPrizes = JSON.parse(localStorage.getItem('prizes') || '[]')
-        const storedParticipants = JSON.parse(localStorage.getItem('participants') || '[]')
-        const storedWinners = JSON.parse(localStorage.getItem('winners') || '[]')
-        setPrizes(storedPrizes)
-        setParticipants(storedParticipants)
-        setWinners(storedWinners)
-    }, [])
 
-    const handleAddPrize = (newPrize: Omit<Prize, 'id_prize' | 'sorteado'>) => {
+    useEffect(() => {
+        const loadData = async () => {
+            const responseParticipants = await request(URL_PARTICIPANT, "GET");
+
+            if (responseParticipants.status_code === 200) {
+                setParticipants(responseParticipants.data);
+            }
+
+            const responsePrize = await request(URL_PRIZE, "GET");
+
+            if (responsePrize.status_code === 200) {
+                setPrizes(responsePrize.data);
+            }
+
+
+            const responseWinners = await request(URL_WINNER, "GET");
+
+            if (responseWinners.status_code === 200) {
+                setWinners(responseWinners.data);
+            }
+            
+        };
+
+        loadData();
+    }, []);
+
+    const handleAddPrize = async (newPrize: Omit<Prize, 'id_prize' | 'sorteado'>) => {
         const prize: Prize = {
-            id_prize: prizes.length + 1,
             ...newPrize,
             sorteado: false
         }
-        const updatedPrizes = [...prizes, prize]
-        setPrizes(updatedPrizes)
-        localStorage.setItem('prizes', JSON.stringify(updatedPrizes))
-        toast({
-            variant: "success",
-            title: "Premio añadido",
-            description: "El premio ha sido agregado exitosamente.",
-        })
+
+        const responsePrize = await request(URL_PRIZE, "POST", prize);
+
+        if (responsePrize.status_code === 200) {
+            const updatedPrizes = [...prizes, responsePrize.data]
+            setPrizes(updatedPrizes)
+            toast({
+                variant: "success",
+                title: "Premio añadido",
+                description: "El premio ha sido agregado exitosamente.",
+            })
+        }
     }
 
     const handleUploadCSV = (file: File) => {
@@ -130,7 +154,7 @@ const AdminDashboard = () => {
         setShowDrawingModal(true);
 
         // Simulate the drawing process
-        setTimeout(() => {
+        setTimeout(async () => {
             setShowDrawingModal(false);
 
             const availableParticipants = participants.filter(p =>
@@ -149,40 +173,56 @@ const AdminDashboard = () => {
             const randomParticipantIndex = Math.floor(Math.random() * availableParticipants.length);
             const selectedParticipant = availableParticipants[randomParticipantIndex];
 
-            const newWinner: Winner = {
-                id_winner: winners.length + 1,
-                id_prize: prize.id_prize,
-                id_participant: selectedParticipant.id_participant,
-                drawDate: new Date().toISOString(),
-                participant_name: selectedParticipant.name,
-                participant_number: selectedParticipant.ticket_number,
-                prize_name: prize.name
-            };
+            const responseWinner = await request(URL_WINNER, 'POST', {
+                'id_prize': prize.id_prize,
+                'id_participant': selectedParticipant.id_participant,
+                'drawdate': new Date().toISOString(),
+            })
 
-            setCurrentWinner(newWinner);
-            setShowWinnerModal(true);
+            if(responseWinner.status_code === 200){
+                const newWinner: Winner = {
+                    ... responseWinner.data,
+                    participant_name: selectedParticipant.name,
+                    ticket_number: selectedParticipant.ticket_number,
+                    prize_name: prize.name
+                };
+                setCurrentWinner(newWinner);
+                setShowWinnerModal(true);
 
-            const updatedPrizes = prizes.map(p =>
-                p.id_prize === prize.id_prize ? { ...p, sorteado: true } : p
-            );
-            const updatedParticipants = participants.map(p =>
-                p.id_participant === selectedParticipant.id_participant ? { ...p, active: false } : p
-            );
-            const updatedWinners = [...winners, newWinner];
+                const updatedWinners = [...winners, newWinner];
+                setWinners(updatedWinners);
+            } else {
+                return;
+            }
 
-            setPrizes(updatedPrizes);
-            setParticipants(updatedParticipants);
-            setWinners(updatedWinners);
+            const requestUpdatePrizes = await request(URL_PRIZE, "PUT",  { 'id_prize': prize.id_prize, 'sorteado': true})
 
-            localStorage.setItem('prizes', JSON.stringify(updatedPrizes));
-            localStorage.setItem('participants', JSON.stringify(updatedParticipants));
-            localStorage.setItem('winners', JSON.stringify(updatedWinners));
+            if (requestUpdatePrizes.status_code === 200) {
+                const updatedPrizes = prizes.map(p =>
+                    p.id_prize === prize.id_prize ? { ...p, sorteado: true } : p
+                );
+                setPrizes(updatedPrizes);
+            } else {
+                return;
+            }
+
+            const requestUpdateParticipants = await request(URL_PARTICIPANT, "PUT",  { 'id_participant': selectedParticipant.id_participant, 'active': false})
+
+            if (requestUpdateParticipants.status_code === 200) {
+                const updatedParticipants = participants.map(p =>
+                    p.id_participant === selectedParticipant.id_participant ? { ...p, active: false } : p
+                );
+                setParticipants(updatedParticipants);
+            } else {
+                return;
+            }
 
             toast({
                 title: "¡Ganador seleccionado!",
                 description: `${selectedParticipant.name} ha ganado ${prize.name}`,
                 variant: "success",
             });
+        
         }, 5000);
     };
 

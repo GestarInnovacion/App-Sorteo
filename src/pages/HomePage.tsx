@@ -6,6 +6,9 @@ import { useNavigate } from 'react-router-dom'
 import { useToast } from '@/hooks/use-toast'
 import { User2, Lock, Home } from 'lucide-react'
 
+import { request } from '@/services/index'
+import { URL_LOGIN } from '@/constants/index'
+
 const HomePage = () => {
     const [showLogin, setShowLogin] = useState(false)
     const [username, setUsername] = useState('')
@@ -13,22 +16,41 @@ const HomePage = () => {
     const navigate = useNavigate()
     const { toast } = useToast()
 
-    const handleLogin = (e: React.FormEvent) => {
-        e.preventDefault()
-        if (username === 'admin' && password === 'sorteofiesta2024') {
-            navigate('/admin')
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+    
+        const loginData = {
+            grant_type: 'password',
+            username: username,
+            password: password,
+            scope: '',
+            client_id: 'string',
+            client_secret: 'string'
+        };
+    
+        const response = await request(
+            URL_LOGIN, 
+            'POST', 
+            loginData, 
+            'application/x-www-form-urlencoded'
+        );
+    
+        if (response.status_code === 200) {
             toast({
-                title: "¡Bienvenido, Administrador!",
+                title: "¡Bienvenido!",
                 description: "Has iniciado sesión exitosamente.",
-            })
+            });
+            
+            // Navegar usando el enrutador de tu aplicación
+            navigate("/admin");
         } else {
             toast({
                 title: "Error de autenticación",
-                description: "Usuario o contraseña incorrectos.",
+                description: response.data.detail || "Usuario o contraseña incorrectos.",
                 variant: "destructive",
-            })
+            });
         }
-    }
+    };
 
     return (
         <div className="min-h-screen bg-[#1a237e] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]">
