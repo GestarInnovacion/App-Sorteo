@@ -9,10 +9,11 @@ import { Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
 import { request } from '@/services/index';
+import { URL_PROFILE } from '@/constants/index'
 
 const checkUserProfile = async () => {
   try {
-    const response = await request('http://localhost:8000/users/profile', 'GET');
+    const response = await request(URL_PROFILE, 'GET');
     return response.status_code === 200 ? response.data : null;
   } catch (error) {
     console.error('Error verificando perfil:', error);
