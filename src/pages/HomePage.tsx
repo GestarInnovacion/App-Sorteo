@@ -102,11 +102,11 @@ const HomePage = () => {
                     transition={{ duration: 1 }}
                 >
                     <motion.div
-                        className="mb-16 text-center"
+                        className="mb-8 md:mb-16 text-center"
                         style={{ y: scrollY * 0.5 }}
                     >
                         <motion.h1
-                            className="text-9xl font-normal text-white mb-8"
+                            className="text-5xl md:text-7xl lg:text-9xl font-normal text-white mb-4 md:mb-8"
                             initial={{ opacity: 0, y: -50 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2, duration: 0.8 }}
@@ -118,7 +118,7 @@ const HomePage = () => {
                             ¡Fiesta de Fin de Año!
                         </motion.h1>
                         <motion.p
-                            className="text-xl text-white/80"
+                            className="text-lg md:text-xl text-white/80"
                             initial={{ opacity: 0, y: -30 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.4, duration: 0.8 }}
@@ -127,9 +127,9 @@ const HomePage = () => {
                         </motion.p>
                     </motion.div>
 
-                    <div className="flex justify-between items-start">
+                    <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-8 md:gap-0">
                         <motion.div
-                            className="w-1/2 pr-8"
+                            className="w-full md:w-1/2 md:pr-8"
                             initial={{ opacity: 0, x: -50 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.8 }}
@@ -144,21 +144,21 @@ const HomePage = () => {
                             initial={{ opacity: 0, x: 50 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.8 }}
-                            className="w-2/5"
+                            className="w-full md:w-2/5"
                         >
-                            <div className="rounded-3xl bg-white/5 backdrop-blur-sm border border-white/10 p-6 shadow-2xl">
-                                <div className="mb-8 flex justify-center space-x-4">
+                            <div className="rounded-3xl bg-white/5 backdrop-blur-sm border border-white/10 p-4 md:p-6 shadow-2xl">
+                                <div className="mb-6 md:mb-8 flex justify-center space-x-4">
                                     <motion.img
                                         src="/forza-logo.png"
                                         alt="Forza Logo"
-                                        className="h-12 brightness-200 contrast-200"
+                                        className="h-10 md:h-12 brightness-200 contrast-200"
                                         whileHover={{ scale: 1.1, rotate: 5 }}
                                         whileTap={{ scale: 0.9 }}
                                     />
                                     <motion.img
                                         src="/gestar-logo.png"
                                         alt="Gestar Logo"
-                                        className="h-12 brightness-200 contrast-200"
+                                        className="h-10 md:h-12 brightness-200 contrast-200"
                                         whileHover={{ scale: 1.1, rotate: -5 }}
                                         whileTap={{ scale: 0.9 }}
                                     />
@@ -179,7 +179,7 @@ const HomePage = () => {
                                             >
                                                 <Button
                                                     onClick={() => navigate('/participant')}
-                                                    className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white py-5 text-base rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                                                    className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white py-4 md:py-5 text-sm md:text-base rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
                                                 >
                                                     <User2 className="mr-2 h-4 w-4" />
                                                     Registrar Participante
@@ -192,7 +192,7 @@ const HomePage = () => {
                                                 <Button
                                                     onClick={() => setShowLogin(true)}
                                                     variant="outline"
-                                                    className="w-full border-white/10 text-white hover:bg-white/10 py-5 text-base rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                                                    className="w-full border-white/10 text-white hover:bg-white/10 py-4 md:py-5 text-sm md:text-base rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
                                                 >
                                                     <Lock className="mr-2 h-4 w-4" />
                                                     Administrador
@@ -205,7 +205,7 @@ const HomePage = () => {
                                                 <Button
                                                     onClick={() => setShowLookupModal(true)}
                                                     variant="outline"
-                                                    className="w-full border-white/10 text-white hover:bg-white/10 py-5 text-base rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                                                    className="w-full border-white/10 text-white hover:bg-white/10 py-4 md:py-5 text-sm md:text-base rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
                                                 >
                                                     <Search className="mr-2 h-4 w-4" />
                                                     Buscar Número de Sorteo
@@ -226,7 +226,7 @@ const HomePage = () => {
                                                 placeholder="Usuario"
                                                 value={username}
                                                 onChange={(e) => setUsername(e.target.value)}
-                                                className="bg-white/10 border-white/10 text-white placeholder:text-white/50 rounded-xl py-5"
+                                                className="bg-white/10 border-white/10 text-white placeholder:text-white/50 rounded-xl py-4 md:py-5"
                                             />
                                             <div className="relative">
                                                 <Input
@@ -234,7 +234,7 @@ const HomePage = () => {
                                                     placeholder="Contraseña"
                                                     value={password}
                                                     onChange={(e) => setPassword(e.target.value)}
-                                                    className="bg-white/10 border-white/10 text-white placeholder:text-white/50 rounded-xl py-5 pr-10"
+                                                    className="bg-white/10 border-white/10 text-white placeholder:text-white/50 rounded-xl py-4 md:py-5 pr-10"
                                                 />
                                                 <button
                                                     type="button"
@@ -263,7 +263,7 @@ const HomePage = () => {
                                             >
                                                 <Button
                                                     type="submit"
-                                                    className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white py-5 text-base rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                                                    className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white py-4 md:py-5 text-sm md:text-base rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
                                                 >
                                                     Iniciar sesión
                                                 </Button>
@@ -276,7 +276,7 @@ const HomePage = () => {
                                                     type="button"
                                                     variant="ghost"
                                                     onClick={() => setShowLogin(false)}
-                                                    className="w-full text-white hover:bg-white/10 py-5 text-base rounded-xl transition-all duration-300"
+                                                    className="w-full text-white hover:bg-white/10 py-4 md:py-5 text-sm md:text-base rounded-xl transition-all duration-300"
                                                 >
                                                     Volver al inicio
                                                 </Button>
@@ -291,7 +291,7 @@ const HomePage = () => {
             </div>
 
             <motion.div
-                className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white/50"
+                className="absolute bottom-4 md:bottom-8 left-1/2 transform -translate-x-1/2 text-white/50"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1, duration: 0.8 }}

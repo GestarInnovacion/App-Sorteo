@@ -18,8 +18,6 @@ interface PrizeCardProps {
 
 export function PrizeCard({ prize, onClick }: PrizeCardProps) {
     // Calcular la intensidad del verde basado en el rango final
-    const maxRange = 1000 // Asumimos un rango máximo de 1000
-    const intensity = Math.min((prize.range_end / maxRange) * 100, 100)
 
     return (
         <motion.div
