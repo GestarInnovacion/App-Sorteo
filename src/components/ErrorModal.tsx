@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { motion } from 'framer-motion'
 
 interface ErrorModalProps {
@@ -23,7 +23,16 @@ export function ErrorModal({ open, onOpenChange, existingParticipant, field }: E
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-gradient-to-br from-red-500 to-purple-600 border-none text-white">
+            <DialogContent
+                className="bg-gradient-to-br from-red-500 to-purple-600 border-none text-white rounded-3xl overflow-hidden"
+                description="Información sobre el participante existente"
+            >
+                <DialogHeader>
+                    <DialogTitle className="text-2xl font-bold">Error de Registro</DialogTitle>
+                    <DialogDescription className="text-white/80">
+                        Información sobre el participante existente
+                    </DialogDescription>
+                </DialogHeader>
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -41,7 +50,7 @@ export function ErrorModal({ open, onOpenChange, existingParticipant, field }: E
                     <p className="text-lg mb-4">
                         Ya existe un registro con {fieldNames[field] === 'cédula' ? 'esta' : 'este'} {fieldNames[field]}
                     </p>
-                    <div className="bg-white/10 rounded-lg p-4 text-left">
+                    <div className="bg-white/10 rounded-2xl p-4 text-left">
                         <p className="mb-2"><strong>Cédula:</strong> {existingParticipant.cedula}</p>
                         <p className="mb-2"><strong>Número de Sorteo:</strong> {existingParticipant.ticket_number}</p>
                         <p><strong>Nombre:</strong> {existingParticipant.name}</p>

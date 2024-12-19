@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import confetti from 'canvas-confetti'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -11,7 +11,7 @@ interface SuccessModalProps {
 }
 
 export function SuccessModal({ open, onOpenChange, participantName, participantNumber }: SuccessModalProps) {
-    const [showTicket, setShowTicket] = useState(false)
+    const [, setShowTicket] = useState(false)
 
     useEffect(() => {
         if (open) {
@@ -28,7 +28,16 @@ export function SuccessModal({ open, onOpenChange, participantName, participantN
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-gradient-to-br from-green-500 to-blue-600 border-none text-white max-w-md">
+            <DialogContent
+                className="bg-gradient-to-br from-green-500 to-blue-600 border-none text-white max-w-md rounded-3xl overflow-hidden"
+                description="Detalles de tu registro exitoso en el sorteo"
+            >
+                <DialogHeader>
+                    <DialogTitle className="text-2xl font-bold">Registro Exitoso</DialogTitle>
+                    <DialogDescription className="text-white/80">
+                        Detalles de tu registro exitoso en el sorteo
+                    </DialogDescription>
+                </DialogHeader>
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -47,18 +56,16 @@ export function SuccessModal({ open, onOpenChange, participantName, participantN
                         {participantName}, has sido registrado exitosamente en el sorteo.
                     </p>
                     <AnimatePresence>
-                        {showTicket && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                className="bg-white/20 rounded-lg p-6 mb-6"
-                            >
-                                <h3 className="text-2xl font-semibold mb-2">Tu Boleto</h3>
-                                <p className="text-4xl font-bold mb-2">{participantNumber}</p>
-                                <p className="text-sm opacity-80">Guarda este número</p>
-                            </motion.div>
-                        )}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="bg-white/20 rounded-2xl p-6 mb-6"
+                        >
+                            <h3 className="text-2xl font-semibold mb-2">Tu Boleto</h3>
+                            <p className="text-4xl font-bold mb-2">{participantNumber}</p>
+                            <p className="text-sm opacity-80">Guarda este número</p>
+                        </motion.div>
                     </AnimatePresence>
                     <p className="text-lg mb-4">
                         Estás participando por increíbles premios.

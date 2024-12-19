@@ -1,10 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Trophy, Gift, Star, SnowflakeIcon as Confetti } from 'lucide-react'
+import { Trophy, Gift, Star } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import { useEffect } from 'react'
-import { Winner, Prize, Participant } from '../types'
+import { Winner } from '../types'
 
 interface WinnerModalProps {
     isOpen: boolean
@@ -81,7 +81,7 @@ export function WinnerModal({ isOpen, onOpenChange, winner, onNextPrize }: Winne
                                 <h2 className="text-5xl font-bold mb-6">¡Tenemos un Ganador!</h2>
                                 <div className="bg-white/20 backdrop-blur-md rounded-3xl p-6 mb-6">
                                     <h3 className="text-4xl font-bold mb-3">{winner.participant_name}</h3>
-                                    <p className="text-2xl mb-3">Número: {winner.participant_number}</p>
+                                    <p className="text-2xl mb-3">Número: {winner.ticket_number}</p>
                                     <p className="text-3xl font-semibold">Premio: {winner.prize_name}</p>
                                 </div>
                             </motion.div>

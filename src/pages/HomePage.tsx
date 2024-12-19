@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast'
 import { User2, Lock, Home } from 'lucide-react'
 
 import { request } from '@/services/index'
-import { URL_LOGIN } from '@/constants/index'
+import { URL_LOGIN } from '@/hooks/constants/index'
 
 const HomePage = () => {
     const [showLogin, setShowLogin] = useState(false)
@@ -18,7 +18,7 @@ const HomePage = () => {
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-    
+
         const loginData = {
             grant_type: 'password',
             username: username,
@@ -27,20 +27,20 @@ const HomePage = () => {
             client_id: 'string',
             client_secret: 'string'
         };
-    
+
         const response = await request(
-            URL_LOGIN, 
-            'POST', 
-            loginData, 
+            URL_LOGIN,
+            'POST',
+            loginData,
             'application/x-www-form-urlencoded'
         );
-    
+
         if (response.status_code === 200) {
             toast({
                 title: "¡Bienvenido!",
                 description: "Has iniciado sesión exitosamente.",
             });
-            
+
             // Navegar usando el enrutador de tu aplicación
             navigate("/admin");
         } else {

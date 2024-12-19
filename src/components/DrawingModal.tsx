@@ -95,4 +95,3 @@ export function DrawingModal({ isOpen, onOpenChange }: DrawingModalProps) {
         </Dialog>
     )
 }
-

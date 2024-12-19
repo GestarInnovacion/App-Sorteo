@@ -1,10 +1,8 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
-import { useToast } from '@/hooks/use-toast'
-import confetti from 'canvas-confetti'
 import { Star } from 'lucide-react'
-import { Prize } from '../types';
+import { Prize } from '../types'
 
 interface DrawSectionProps {
     prizes: Prize[]
@@ -12,25 +10,11 @@ interface DrawSectionProps {
 }
 
 export function DrawSection({ prizes, onSelectPrize }: DrawSectionProps) {
-    const [, setSelectedPrize] = useState<Prize | null>(null)
-    const { toast } = useToast()
+    const [selectedPrize, setSelectedPrize] = useState<Prize | null>(null)
 
     const handleSelectPrize = (prize: Prize) => {
         setSelectedPrize(prize)
-        playSound('start')
         onSelectPrize(prize)
-        confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 }
-        })
-        playSound('win')
-        toast({
-            title: "¡Sorteo Realizado!",
-            description: `Se ha sorteado el premio: ${prize.name}`,
-            variant: "success",
-        })
-        setSelectedPrize(null)
     }
 
     const playSound = (type: 'start' | 'win') => {
@@ -72,7 +56,7 @@ export function DrawSection({ prizes, onSelectPrize }: DrawSectionProps) {
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 opacity-30 blur-3xl" />
                 <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     <AnimatePresence>
-                        {prizes.filter(p => !p.sorteado).map((prize) => (
+                        {prizes.map((prize) => (
                             <motion.div
                                 key={prize.id_prize}
                                 initial={{ opacity: 0, scale: 0.8 }}

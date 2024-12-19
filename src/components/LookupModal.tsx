@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Ticket, User, CreditCard } from 'lucide-react'
 import { Participant } from '../types'
@@ -41,9 +40,15 @@ export function LookupModal({ isOpen, onOpenChange }: LookupModalProps) {
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-gradient-to-br from-green-600 to-blue-900 border-none text-white sm:max-w-[425px] rounded-3xl overflow-hidden">
+            <DialogContent
+                className="bg-gradient-to-br from-green-600 to-blue-900 border-none text-white sm:max-w-[425px] rounded-3xl overflow-hidden"
+                description="Busca un participante por número de cédula o nombre para ver su número de sorteo"
+            >
                 <DialogHeader>
                     <DialogTitle className="text-3xl font-bold text-center mb-6">Buscar Número de Sorteo</DialogTitle>
+                    <DialogDescription className="text-white/80 text-center">
+                        Busca un participante por número de cédula o nombre para ver su número de sorteo
+                    </DialogDescription>
                 </DialogHeader>
                 <div className="relative">
                     <Input

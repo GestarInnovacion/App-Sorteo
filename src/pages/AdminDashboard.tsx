@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom'
-import { Home, LogOut, Gift, Users, Trophy, Plus, Upload, List, Trash2 } from 'lucide-react'
+import { Home, LogOut, Gift, Users, Trophy, Plus, Upload, List, Trash2, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { AddPrizeModal } from '@/components/AddPrizeModal'
 import { UploadCSVModal } from '@/components/UploadCSVModal'
@@ -12,11 +12,11 @@ import { Card, CardContent } from '@/components/ui/card'
 import { DrawingModal } from '@/components/DrawingModal'
 import { WinnerModal } from '@/components/WinnerModal'
 import { DrawSection } from '@/components/DrawSection'
-import { Prize, Participant, Winner } from '../types';
+import { Prize, Participant, Winner } from '../types'
+import { ResetWarningModal } from '@/components/ResetWarningModal'
 
-import { request } from '@/services/index';
-import {URL_PARTICIPANT, URL_PRIZE, URL_WINNER } from '@/constants/index';
-
+import { request } from '@/services/index'
+import { URL_PARTICIPANT, URL_PRIZE, URL_WINNER } from '@/hooks/constants/index'
 
 const AdminDashboard = () => {
     const [prizes, setPrizes] = useState<Prize[]>([])
@@ -31,31 +31,27 @@ const AdminDashboard = () => {
     const [showDrawingModal, setShowDrawingModal] = useState(false)
     const [showWinnerModal, setShowWinnerModal] = useState(false)
     const [currentWinner, setCurrentWinner] = useState<Winner | null>(null)
+    const [isLeftPanelVisible, setIsLeftPanelVisible] = useState(true)
+    const [showResetWarningModal, setShowResetWarningModal] = useState(false)
     const navigate = useNavigate()
     const { toast } = useToast()
-
 
     useEffect(() => {
         const loadData = async () => {
             const responseParticipants = await request(URL_PARTICIPANT, "GET");
-
             if (responseParticipants.status_code === 200) {
                 setParticipants(responseParticipants.data);
             }
 
             const responsePrize = await request(URL_PRIZE, "GET");
-
             if (responsePrize.status_code === 200) {
                 setPrizes(responsePrize.data);
             }
 
-
             const responseWinners = await request(URL_WINNER, "GET");
-
             if (responseWinners.status_code === 200) {
                 setWinners(responseWinners.data);
             }
-            
         };
 
         loadData();
@@ -107,68 +103,63 @@ const AdminDashboard = () => {
         reader.readAsText(file)
     }
 
-    const handleDeleteAllPrizes = () => {
-        setPrizes([])
-        localStorage.setItem('prizes', JSON.stringify([]))
-        toast({
-            variant: "warning",
-            title: "Premios eliminados",
-            description: "Todos los premios han sido eliminados.",
-        })
-    }
-
-    const handleDeleteAllParticipants = () => {
-        setParticipants([])
-        localStorage.setItem('participants', JSON.stringify([]))
-        toast({
-            variant: "warning",
-            title: "Participantes eliminados",
-            description: "Todos los participantes han sido eliminados.",
-        })
-    }
-
-    const handleDeletePrize = (prizeId: number) => {
-        const updatedPrizes = prizes.filter(prize => prize.id_prize !== prizeId);
-        setPrizes(updatedPrizes);
-        localStorage.setItem('prizes', JSON.stringify(updatedPrizes));
-        toast({
-            variant: "success",
-            title: "Premio eliminado",
-            description: "El premio ha sido eliminado exitosamente.",
-        });
+    const handleDeletePrize = async (prizeId: number) => {
+        const response = await request(URL_PRIZE, "DELETE", { id_prize: prizeId });
+        if (response.status_code === 200) {
+            const updatedPrizes = prizes.filter(prize => prize.id_prize !== prizeId);
+            setPrizes(updatedPrizes);
+            toast({
+                variant: "success",
+                title: "Premio eliminado",
+                description: "El premio ha sido eliminado exitosamente.",
+            });
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "No se pudo eliminar el premio. Por favor, inténtelo de nuevo.",
+            });
+        }
     };
 
-    const handleDeleteParticipant = (participantId: number) => {
-        const updatedParticipants = participants.filter(participant => participant.id_participant !== participantId);
-        setParticipants(updatedParticipants);
-        localStorage.setItem('participants', JSON.stringify(updatedParticipants));
-        toast({
-            variant: "success",
-            title: "Participante eliminado",
-            description: "El participante ha sido eliminado exitosamente.",
-        });
+    const handleDeleteParticipant = async (participantId: number) => {
+        const response = await request(URL_PARTICIPANT, "DELETE", { id_participant: participantId });
+        if (response.status_code === 200) {
+            const updatedParticipants = participants.filter(participant => participant.id_participant !== participantId);
+            setParticipants(updatedParticipants);
+            toast({
+                variant: "success",
+                title: "Participante eliminado",
+                description: "El participante ha sido eliminado exitosamente.",
+            });
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "No se pudo eliminar el participante. Por favor, inténtelo de nuevo.",
+            });
+        }
     };
 
-    const handleSelectPrize = (prize: Prize) => {
+    const handleSelectPrize = async (prize: Prize) => {
+        const availableParticipants = participants.filter(p =>
+            p.active && parseInt(p.ticket_number) >= prize.range_start && parseInt(p.ticket_number) <= prize.range_end
+        );
+
+        if (availableParticipants.length === 0) {
+            toast({
+                title: "No se puede realizar el sorteo",
+                description: `No hay participantes disponibles en el rango ${prize.range_start} - ${prize.range_end} para el premio "${prize.name}".`,
+                variant: "destructive",
+            });
+            return;
+        }
+
         setSelectedPrize(prize);
         setShowDrawingModal(true);
 
-        // Simulate the drawing process
         setTimeout(async () => {
             setShowDrawingModal(false);
-
-            const availableParticipants = participants.filter(p =>
-                p.active && parseInt(p.ticket_number) >= prize.range_start && parseInt(p.ticket_number) <= prize.range_end
-            );
-
-            if (availableParticipants.length === 0) {
-                toast({
-                    title: "No se puede realizar el sorteo",
-                    description: `No hay participantes disponibles en el rango ${prize.range_start} - ${prize.range_end} para el premio "${prize.name}".`,
-                    variant: "destructive",
-                });
-                return;
-            }
 
             const randomParticipantIndex = Math.floor(Math.random() * availableParticipants.length);
             const selectedParticipant = availableParticipants[randomParticipantIndex];
@@ -177,11 +168,11 @@ const AdminDashboard = () => {
                 'id_prize': prize.id_prize,
                 'id_participant': selectedParticipant.id_participant,
                 'drawdate': new Date().toISOString(),
-            })
+            });
 
-            if(responseWinner.status_code === 200){
+            if (responseWinner.status_code === 200) {
                 const newWinner: Winner = {
-                    ... responseWinner.data,
+                    ...responseWinner.data,
                     participant_name: selectedParticipant.name,
                     ticket_number: selectedParticipant.ticket_number,
                     prize_name: prize.name
@@ -191,52 +182,62 @@ const AdminDashboard = () => {
 
                 const updatedWinners = [...winners, newWinner];
                 setWinners(updatedWinners);
+
+                const requestUpdatePrizes = await request(URL_PRIZE, "PUT", { 'id_prize': prize.id_prize, 'sorteado': true });
+                const requestUpdateParticipants = await request(URL_PARTICIPANT, "PUT", { 'id_participant': selectedParticipant.id_participant, 'active': false });
+
+                if (requestUpdatePrizes.status_code === 200 && requestUpdateParticipants.status_code === 200) {
+                    const updatedPrizes = prizes.map(p =>
+                        p.id_prize === prize.id_prize ? { ...p, sorteado: true } : p
+                    );
+                    setPrizes(updatedPrizes);
+
+                    const updatedParticipants = participants.map(p =>
+                        p.id_participant === selectedParticipant.id_participant ? { ...p, active: false } : p
+                    );
+                    setParticipants(updatedParticipants);
+
+                    toast({
+                        title: "¡Sorteo realizado!",
+                        description: `${selectedParticipant.name} ha ganado ${prize.name}`,
+                        variant: "success",
+                    });
+                } else {
+                    toast({
+                        title: "Error",
+                        description: "Hubo un problema al actualizar el premio o el participante.",
+                        variant: "destructive",
+                    });
+                }
             } else {
-                return;
+                toast({
+                    title: "Error",
+                    description: "Hubo un problema al registrar el ganador.",
+                    variant: "destructive",
+                });
             }
-
-            const requestUpdatePrizes = await request(URL_PRIZE, "PUT",  { 'id_prize': prize.id_prize, 'sorteado': true})
-
-            if (requestUpdatePrizes.status_code === 200) {
-                const updatedPrizes = prizes.map(p =>
-                    p.id_prize === prize.id_prize ? { ...p, sorteado: true } : p
-                );
-                setPrizes(updatedPrizes);
-            } else {
-                return;
-            }
-
-            const requestUpdateParticipants = await request(URL_PARTICIPANT, "PUT",  { 'id_participant': selectedParticipant.id_participant, 'active': false})
-
-            if (requestUpdateParticipants.status_code === 200) {
-                const updatedParticipants = participants.map(p =>
-                    p.id_participant === selectedParticipant.id_participant ? { ...p, active: false } : p
-                );
-                setParticipants(updatedParticipants);
-            } else {
-                return;
-            }
-
-            toast({
-                title: "¡Ganador seleccionado!",
-                description: `${selectedParticipant.name} ha ganado ${prize.name}`,
-                variant: "success",
-            });
-        
         }, 5000);
     };
 
-    const handleSaveEditedPrize = (editedPrize: Prize) => {
-        const updatedPrizes = prizes.map(prize =>
-            prize.id_prize === editedPrize.id_prize ? editedPrize : prize
-        )
-        setPrizes(updatedPrizes)
-        localStorage.setItem('prizes', JSON.stringify(updatedPrizes))
-        toast({
-            variant: "success",
-            title: "Premio actualizado",
-            description: "El premio ha sido actualizado exitosamente.",
-        })
+    const handleSaveEditedPrize = async (editedPrize: Prize) => {
+        const response = await request(URL_PRIZE, "PUT", editedPrize);
+        if (response.status_code === 200) {
+            const updatedPrizes = prizes.map(prize =>
+                prize.id_prize === editedPrize.id_prize ? editedPrize : prize
+            )
+            setPrizes(updatedPrizes)
+            toast({
+                variant: "success",
+                title: "Premio actualizado",
+                description: "El premio ha sido actualizado exitosamente.",
+            })
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "No se pudo actualizar el premio. Por favor, inténtelo de nuevo.",
+            });
+        }
     }
 
     const handleNextPrize = () => {
@@ -253,23 +254,106 @@ const AdminDashboard = () => {
         }
     };
 
-    const handleClearWinners = () => {
-        const restoredPrizes = prizes.map(prize => ({ ...prize, sorteado: false }));
-        setPrizes(restoredPrizes);
-        localStorage.setItem('prizes', JSON.stringify(restoredPrizes));
+    const handleClearWinners = async () => {
+        const responseResetWinners = await request(URL_WINNER, "DELETE", { all: true });
+        const responseResetPrizes = await request(URL_PRIZE, "PUT", { all: true, sorteado: false });
+        const responseResetParticipants = await request(URL_PARTICIPANT, "PUT", { all: true, active: true });
 
-        const restoredParticipants = participants.map(participant => ({ ...participant, active: true }));
-        setParticipants(restoredParticipants);
-        localStorage.setItem('participants', JSON.stringify(restoredParticipants));
+        if (responseResetWinners.status_code === 200 && responseResetPrizes.status_code === 200 && responseResetParticipants.status_code === 200) {
+            const restoredPrizes = prizes.map(prize => ({ ...prize, sorteado: false }));
+            setPrizes(restoredPrizes);
 
-        setWinners([]);
-        localStorage.setItem('winners', JSON.stringify([]));
+            const restoredParticipants = participants.map(participant => ({ ...participant, active: true }));
+            setParticipants(restoredParticipants);
 
-        toast({
-            variant: "success",
-            title: "Historial de ganadores vaciado",
-            description: "Se han restaurado los premios y participantes a su estado original.",
-        });
+            setWinners([]);
+
+            toast({
+                variant: "success",
+                title: "Historial de ganadores vaciado",
+                description: "Se han restaurado los premios y participantes a su estado original.",
+            });
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "No se pudo vaciar el historial de ganadores. Por favor, inténtelo de nuevo.",
+            });
+        }
+    };
+
+    const handleDeleteWinner = async (winnerId: number) => {
+        const winnerToDelete = winners.find(w => w.id_winner === winnerId);
+        if (!winnerToDelete) return;
+
+        const responseDeleteWinner = await request(URL_WINNER, "DELETE", { id_winner: winnerId });
+        const responseUpdatePrize = await request(URL_PRIZE, "PUT", { id_prize: winnerToDelete.id_prize, sorteado: false });
+        const responseUpdateParticipant = await request(URL_PARTICIPANT, "PUT", { id_participant: winnerToDelete.id_participant, active: true });
+
+        if (responseDeleteWinner.status_code === 200 && responseUpdatePrize.status_code === 200 && responseUpdateParticipant.status_code === 200) {
+            const updatedWinners = winners.filter(w => w.id_winner !== winnerId);
+            setWinners(updatedWinners);
+
+            const updatedPrizes = prizes.map(prize =>
+                prize.id_prize === winnerToDelete.id_prize ? { ...prize, sorteado: false } : prize
+            );
+            setPrizes(updatedPrizes);
+
+            const updatedParticipants = participants.map(participant =>
+                participant.id_participant === winnerToDelete.id_participant ? { ...participant, active: true } : participant
+            );
+            setParticipants(updatedParticipants);
+
+            toast({
+                variant: "success",
+                title: "Ganador eliminado",
+                description: "Se ha eliminado el ganador y restaurado el premio y participante asociados.",
+            });
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "No se pudo eliminar el ganador. Por favor, inténtelo de nuevo.",
+            });
+        }
+    };
+
+    const toggleLeftPanel = () => {
+        setIsLeftPanelVisible(!isLeftPanelVisible);
+    };
+
+    const handleTotalReset = async (keyword: string) => {
+        if (keyword === 'REINICIAR_TODO') {
+            const responseDeleteWinners = await request(URL_WINNER, "DELETE", { all: true });
+            const responseDeletePrizes = await request(URL_PRIZE, "DELETE", { all: true });
+            const responseDeleteParticipants = await request(URL_PARTICIPANT, "DELETE", { all: true });
+
+            if (responseDeleteWinners.status_code === 200 && responseDeletePrizes.status_code === 200 && responseDeleteParticipants.status_code === 200) {
+                setWinners([]);
+                setPrizes([]);
+                setParticipants([]);
+
+                setShowResetWarningModal(false);
+
+                toast({
+                    variant: "success",
+                    title: "Reinicio completo",
+                    description: "Todos los datos han sido eliminados exitosamente.",
+                });
+            } else {
+                toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: "No se pudo realizar el reinicio completo. Por favor, inténtelo de nuevo.",
+                });
+            }
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Palabra clave incorrecta",
+                description: 'La palabra clave correcta es "REINICIAR_TODO".',
+            });
+        }
     };
 
     return (
@@ -301,6 +385,14 @@ const AdminDashboard = () => {
                         <div className="flex items-center space-x-4">
                             <Button
                                 variant="ghost"
+                                onClick={toggleLeftPanel}
+                                className="text-white hover:bg-white/10 rounded-full"
+                                title={isLeftPanelVisible ? "Ocultar panel" : "Mostrar panel"}
+                            >
+                                {isLeftPanelVisible ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                            </Button>
+                            <Button
+                                variant="ghost"
                                 onClick={() => navigate('/')}
                                 className="text-white hover:bg-white/10 rounded-full"
                             >
@@ -315,6 +407,14 @@ const AdminDashboard = () => {
                                 <LogOut className="mr-2 h-5 w-5" />
                                 Salir
                             </Button>
+                            <Button
+                                variant="ghost"
+                                onClick={() => setShowResetWarningModal(true)}
+                                className="text-white hover:bg-white/10 rounded-full"
+                                title="Reiniciar todo"
+                            >
+                                <RefreshCw className="h-5 w-5" />
+                            </Button>
                         </div>
                     </div>
                 </header>
@@ -322,125 +422,127 @@ const AdminDashboard = () => {
                 <main className="container mx-auto px-6 py-12">
                     <div className="grid grid-cols-12 gap-8">
                         {/* Left Sidebar */}
-                        <div className="col-span-3 space-y-8">
-                            {/* Prize Management */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="rounded-xl bg-white/10 backdrop-blur-lg border border-white/20 p-6"
-                            >
-                                <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
-                                    <Gift className="mr-2 h-5 w-5" />
-                                    Gestión de Premios
-                                </h2>
-                                <div className="space-y-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <Button onClick={() => setShowAddPrizeModal(true)} className="w-full bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-300 hover:scale-105">
-                                            <Plus className="mr-2 h-5 w-5" />
-                                            Agregar
-                                        </Button>
-                                        <Button onClick={() => setShowUploadCSVModal(true)} className="w-full bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-300 hover:scale-105">
-                                            <Upload className="mr-2 h-5 w-5" />
-                                            Cargar CSV
-                                        </Button>
-                                        <Button onClick={() => {
-                                            setShowPrizeListModal(true)
-                                            toast({
-                                                variant: "default",
-                                                title: "Lista de premios",
-                                                description: "Mostrando todos los premios disponibles.",
-                                            })
-                                        }} className="w-full bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-300 hover:scale-105">
-                                            <List className="mr-2 h-5 w-5" />
-                                            Ver Lista
-                                        </Button>
-                                        <Button onClick={handleDeleteAllPrizes} variant="destructive" className="w-full rounded-full transition-all duration-300 hover:scale-105">
-                                            <Trash2 className="mr-2 h-5 w-5" />
-                                            Eliminar Todos
-                                        </Button>
-                                    </div>
-                                    <div className="border border-white/20 rounded-2xl p-4 mt-4">
-                                        <h3 className="text-lg font-semibold text-white mb-2">Estadísticas de Premios</h3>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="text-center">
-                                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/10 backdrop-blur-sm mb-2">
-                                                    <p className="text-2xl font-bold text-white">{prizes.filter(p => !p.sorteado).length}</p>
-                                                </div>
-                                                <p className="text-xs text-white/80">Premios disponibles</p>
+                        <AnimatePresence>
+                            {isLeftPanelVisible && (
+                                <motion.div
+                                    initial={{ opacity: 0, x: -300 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -300 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="col-span-3 space-y-8"
+                                >
+                                    {/* Prize Management */}
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="rounded-xl bg-white/10 backdrop-blur-lg border border-white/20 p-6"
+                                    >
+                                        <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
+                                            <Gift className="mr-2 h-5 w-5" />
+                                            Gestión de Premios
+                                        </h2>
+                                        <div className="space-y-4">
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <Button onClick={() => setShowAddPrizeModal(true)} className="w-full bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-300 hover:scale-105">
+                                                    <Plus className="mr-2 h-5 w-5" />
+                                                    Agregar
+                                                </Button>
+                                                <Button onClick={() => setShowUploadCSVModal(true)} className="w-full bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-300 hover:scale-105 flex items-center justify-center h-10">
+                                                    <Upload className="h-4 w-4 mr-1.5 shrink-0" />
+                                                    Cg CSV
+                                                </Button>
+                                                <Button onClick={() => {
+                                                    setShowPrizeListModal(true)
+                                                    toast({
+                                                        variant: "default",
+                                                        title: "Lista de premios",
+                                                        description: "Mostrando todos los premios disponibles.",
+                                                    })
+                                                }} className="w-full bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-300 hover:scale-105">
+                                                    <List className="mr-2 h-5 w-5" />
+                                                    Ver Lista
+                                                </Button>
                                             </div>
-                                            <div className="text-center">
-                                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/10 backdrop-blur-sm mb-2">
-                                                    <p className="text-2xl font-bold text-white">{prizes.length}</p>
+                                            <div className="border border-white/20 rounded-2xl p-4 mt-4">
+                                                <h3 className="text-lg font-semibold text-white mb-2">Estadísticas de Premios</h3>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="text-center">
+                                                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/10 backdrop-blur-sm mb-2">
+                                                            <p className="text-2xl font-bold text-white">{prizes.filter(p => !p.sorteado).length}</p>
+                                                        </div>
+                                                        <p className="text-xs text-white/80">Premios disponibles</p>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/10 backdrop-blur-sm mb-2">
+                                                            <p className="text-2xl font-bold text-white">{prizes.length}</p>
+                                                        </div>
+                                                        <p className="text-xs text-white/80">Total de premios</p>
+                                                    </div>
                                                 </div>
-                                                <p className="text-xs text-white/80">Total de premios</p>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </motion.div>
+                                    </motion.div>
 
-                            {/* Participant Management */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 }}
-                                className="rounded-xl bg-white/10 backdrop-blur-lg border border-white/20 p-6"
-                            >
-                                <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
-                                    <Users className="mr-2 h-5 w-5" />
-                                    Gestión de Participantes
-                                </h2>
-                                <div className="space-y-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <Button onClick={() => {
-                                            setShowParticipantListModal(true)
-                                            toast({
-                                                variant: "default",
-                                                title: "Lista de participantes",
-                                                description: "Mostrando todos los participantes registrados.",
-                                            })
-                                        }} className="w-full bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-300 hover:scale-105">
-                                            <List className="mr-2 h-5 w-5" />
-                                            Ver Lista
-                                        </Button>
-                                        <Button onClick={handleDeleteAllParticipants} variant="destructive" className="w-full rounded-full transition-all duration-300 hover:scale-105">
-                                            <Trash2 className="mr-2 h-5 w-5" />
-                                            Eliminar Todos
-                                        </Button>
-                                    </div>
-                                    <div className="border border-white/20 rounded-2xl p-4 mt-4">
-                                        <h3 className="text-lg font-semibold text-white mb-2">Estadísticas de Participantes</h3>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="text-center">
-                                                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm mb-2">
-                                                    <p className="text-xl font-bold text-white">{participants.length}</p>
-                                                </div>
-                                                <p className="text-xs text-white/80">Total</p>
+                                    {/* Participant Management */}
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.1 }}
+                                        className="rounded-xl bg-white/10 backdrop-blur-lg border border-white/20 p-6"
+                                    >
+                                        <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
+                                            <Users className="mr-2 h-5 w-5" />
+                                            Gestión de Participantes
+                                        </h2>
+                                        <div className="space-y-4">
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <Button onClick={() => {
+                                                    setShowParticipantListModal(true)
+                                                    toast({
+                                                        variant: "default",
+                                                        title: "Lista de participantes",
+                                                        description: "Mostrando todos los participantes registrados.",
+                                                    })
+                                                }} className="w-full bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-300 hover:scale-105">
+                                                    <List className="mr-2 h-5 w-5" />
+                                                    Ver Lista
+                                                </Button>
                                             </div>
-                                            <div className="text-center">
-                                                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm mb-2">
-                                                    <p className="text-xl font-bold text-white">{participants.filter(p => p.active).length}</p>
+                                            <div className="border border-white/20 rounded-2xl p-4 mt-4">
+                                                <h3 className="text-lg font-semibold text-white mb-2">Estadísticas de Participantes</h3>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="text-center">
+                                                        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm mb-2">
+                                                            <p className="text-xl font-bold text-white">{participants.length}</p>
+                                                        </div>
+                                                        <p className="text-xs text-white/80">Total</p>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm mb-2">
+                                                            <p className="text-xl font-bold text-white">{participants.filter(p => p.active).length}</p>
+                                                        </div>
+                                                        <p className="text-xs text-white/80">Activos</p>
+                                                    </div>
                                                 </div>
-                                                <p className="text-xs text-white/80">Activos</p>
+                                                <div className="text-center mt-4">
+                                                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm mb-2">
+                                                        <p className="text-xl font-bold text-white">{participants.filter(p => !p.active).length}</p>
+                                                    </div>
+                                                    <p className="text-xs text-white/80">Inactivos</p>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="text-center mt-4">
-                                            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm mb-2">
-                                                <p className="text-xl font-bold text-white">{participants.filter(p => !p.active).length}</p>
-                                            </div>
-                                            <p className="text-xs text-white/80">Inactivos</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        </div>
+                                    </motion.div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         {/* Main Content */}
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.2 }}
-                            className="col-span-6 rounded-xl bg-white/10 backdrop-blur-lg border border-white/20 p-8 flex flex-col items-center justify-center min-h-[600px] overflow-y-auto"
+                            className={`${isLeftPanelVisible ? 'col-span-6' : 'col-span-9'} rounded-xl bg-white/10 backdrop-blur-lg border border-white/20 p-8 flex flex-col items-center justify-center min-h-[600px] overflow-y-auto`}
                         >
                             <DrawSection
                                 prizes={prizes.filter(p => !p.sorteado)}
@@ -461,12 +563,12 @@ const AdminDashboard = () => {
                                     Historial de Ganadores
                                 </div>
                                 <Button
-                                    variant="ghost"
+                                    variant="destructive"
                                     size="sm"
-                                    className="text-white hover:bg-white/10"
+                                    className="bg-red-600 hover:bg-red-700 text-white rounded-full transition-all duration-300 hover:scale-105"
                                     onClick={handleClearWinners}
                                 >
-                                    <Trash2 className="h-4 w-4" />
+                                    <Trash2 className="h-4 w-4 mr-2" />
                                     Vaciar
                                 </Button>
                             </h2>
@@ -478,10 +580,20 @@ const AdminDashboard = () => {
                                 <div className="space-y-4">
                                     {winners.map((winner) => (
                                         <Card key={winner.id_winner} className="bg-white/5 border-white/10 rounded-2xl overflow-hidden">
-                                            <CardContent className="p-4">
-                                                <p className="font-semibold text-white text-lg">{participants.find(p => p.id_participant === winner.id_participant)?.name}</p>
-                                                <p className="text-white/80 text-sm mt-1">Premio: {prizes.find(p => p.id_prize === winner.id_prize)?.name}</p>
-                                                <p className="text-white/60 text-xs mt-1">Fecha: {winner.drawDate}</p>
+                                            <CardContent className="p-4 flex justify-between items-start">
+                                                <div>
+                                                    <p className="font-semibold text-white text-lg">{winner.participant_name}</p>
+                                                    <p className="text-white/80 text-sm mt-1">Premio: {winner.prize_name}</p>
+                                                    <p className="text-white/60 text-xs mt-1">Fecha: {winner.drawDate}</p>
+                                                </div>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleDeleteWinner(winner.id_winner)}
+                                                    className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
                                             </CardContent>
                                         </Card>
                                     ))}
@@ -510,10 +622,6 @@ const AdminDashboard = () => {
                 items={prizes}
                 type="prizes"
                 onDelete={handleDeletePrize}
-                onEdit={(prize) => {
-                    setSelectedPrize(prize)
-                    setShowEditPrizeModal(true)
-                }}
             />
 
             <ViewListModal
@@ -522,13 +630,6 @@ const AdminDashboard = () => {
                 items={participants}
                 type="participants"
                 onDelete={handleDeleteParticipant}
-            />
-
-            <EditPrizeModal
-                isOpen={showEditPrizeModal}
-                onOpenChange={setShowEditPrizeModal}
-                prize={selectedPrize as Prize}
-                onEditPrize={handleSaveEditedPrize}
             />
 
             <DrawingModal
@@ -541,6 +642,11 @@ const AdminDashboard = () => {
                 onOpenChange={setShowWinnerModal}
                 winner={currentWinner}
                 onNextPrize={handleNextPrize}
+            />
+            <ResetWarningModal
+                isOpen={showResetWarningModal}
+                onOpenChange={setShowResetWarningModal}
+                onConfirmReset={handleTotalReset}
             />
         </div>
     )

@@ -12,38 +12,47 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Participant } from '../types'
 
 import { request } from '@/services/index'
-import { URL_PARTICIPANT } from '@/constants/index'
-
+import { URL_PARTICIPANT } from '@/hooks/constants/index'
 
 interface FormData {
     cedula: string
-    ticket_number: string
     name: string
-    active:boolean
+    ticket_number: string
+    active: boolean
 }
 
 const ParticipantPage = () => {
     const [step, setStep] = useState(1)
     const [formData, setFormData] = useState<FormData>({
         cedula: '',
-        ticket_number: '',
         name: '',
+        ticket_number: '',
         active: true,
     })
     const [showSuccessModal, setShowSuccessModal] = useState(false)
     const [showErrorModal, setShowErrorModal] = useState(false)
     const [showLookupModal, setShowLookupModal] = useState(false)
     const [existingParticipant, setExistingParticipant] = useState<FormData | null>(null)
-    const [errorField, setErrorField] = useState<'cedula' | 'ticket_number' | 'name'>('cedula')
+    const [errorField, setErrorField] = useState<'cedula' | 'name' | 'ticket_number'>('cedula')
     const { toast } = useToast()
     const navigate = useNavigate()
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value })
+        const { name, value } = e.target;
+        if (name === 'cedula') {
+            const numericValue = value.replace(/\D/g, '').slice(0, 10);
+            setFormData({ ...formData, [name]: numericValue });
+        } else if (name === 'ticket_number') {
+            const numericValue = value.replace(/\D/g, '');
+            setFormData({ ...formData, [name]: numericValue });
+        } else if (name === 'name') {
+            const textValue = value.replace(/[^a-zA-Z\s]/g, '');
+            setFormData({ ...formData, [name]: textValue });
+        }
     }
 
     const checkExistingParticipant = async (field: keyof FormData, value: string) => {
-        const response =  await request(URL_PARTICIPANT, "GET")
+        const response = await request(URL_PARTICIPANT, "GET")
         const participants: Participant[] = response.data
         return participants.find((p) => p[field] === value)
     }
@@ -68,24 +77,7 @@ const ParticipantPage = () => {
             }
         }
 
-        if (step === 2 && !formData.ticket_number) {
-            toast({
-                title: "Campo requerido",
-                description: "Por favor ingrese su número de sorteo",
-                variant: "destructive",
-            })
-            return
-        }
-        if (step === 2) {
-            const existing = await checkExistingParticipant('ticket_number', formData.ticket_number)
-            if (existing) {
-                setExistingParticipant(existing)
-                setErrorField('ticket_number')
-                setShowErrorModal(true)
-                return
-            }
-        }
-        if (step === 3 && !formData.name) {
+        if (step === 2 && !formData.name) {
             toast({
                 title: "Campo requerido",
                 description: "Por favor ingrese su nombre completo",
@@ -93,7 +85,7 @@ const ParticipantPage = () => {
             })
             return
         }
-        if (step === 3) {
+        if (step === 2) {
             const existing = await checkExistingParticipant('name', formData.name)
             if (existing) {
                 setExistingParticipant(existing)
@@ -101,14 +93,31 @@ const ParticipantPage = () => {
                 setShowErrorModal(true)
                 return
             }
-            
+        }
+
+        if (step === 3 && !formData.ticket_number) {
+            toast({
+                title: "Campo requerido",
+                description: "Por favor ingrese su número de sorteo",
+                variant: "destructive",
+            })
+            return
+        }
+        if (step === 3) {
+            const existing = await checkExistingParticipant('ticket_number', formData.ticket_number)
+            if (existing) {
+                setExistingParticipant(existing)
+                setErrorField('ticket_number')
+                setShowErrorModal(true)
+                return
+            }
+
             formData.active = true
             const response = await request(URL_PARTICIPANT, "POST", formData)
 
             if (response.status_code === 200) {
                 setShowSuccessModal(true)
             }
-
         } else {
             setStep(step + 1)
         }
@@ -134,6 +143,8 @@ const ParticipantPage = () => {
                             onChange={handleChange}
                             placeholder="Ingrese su número de cédula"
                             className="bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl py-6 text-lg"
+                            maxLength={10}
+                            required
                         />
                     </motion.div>
                 )
@@ -141,27 +152,6 @@ const ParticipantPage = () => {
                 return (
                     <motion.div
                         key="step2"
-                        initial={{ opacity: 0, x: 50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -50 }}
-                        className="space-y-4"
-                    >
-                        <h2 className="text-3xl font-bold text-white text-center mb-8">
-                            Ingresa tu Número de Sorteo
-                        </h2>
-                        <Input
-                            name="ticket_number"
-                            value={formData.ticket_number}
-                            onChange={handleChange}
-                            placeholder="Ingrese su número de sorteo"
-                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl py-6 text-lg"
-                        />
-                    </motion.div>
-                )
-            case 3:
-                return (
-                    <motion.div
-                        key="step3"
                         initial={{ opacity: 0, x: 50 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -50 }}
@@ -176,6 +166,32 @@ const ParticipantPage = () => {
                             onChange={handleChange}
                             placeholder="Ingrese su nombre completo"
                             className="bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl py-6 text-lg"
+                            required
+                        />
+                    </motion.div>
+                )
+            case 3:
+                return (
+                    <motion.div
+                        key="step3"
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -50 }}
+                        className="space-y-4"
+                    >
+                        <h2 className="text-3xl font-bold text-white text-center mb-8">
+                            Ingresa tu Número de Sorteo
+                        </h2>
+                        <Input
+                            name="ticket_number"
+                            value={formData.ticket_number}
+                            onChange={handleChange}
+                            placeholder="Ingrese su número de sorteo"
+                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl py-6 text-lg"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            required
                         />
                     </motion.div>
                 )
