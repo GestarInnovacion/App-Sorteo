@@ -7,7 +7,6 @@ import { useToast } from '@/hooks/use-toast'
 import { AddPrizeModal } from '@/components/AddPrizeModal'
 import { UploadCSVModal } from '@/components/UploadCSVModal'
 import { ViewListModal } from '@/components/ViewListModal'
-import { EditPrizeModal } from '@/components/EditPrizeModal'
 import { Card, CardContent } from '@/components/ui/card'
 import { DrawingModal } from '@/components/DrawingModal'
 import { WinnerModal } from '@/components/WinnerModal'
@@ -26,8 +25,8 @@ const AdminDashboard = () => {
     const [showUploadCSVModal, setShowUploadCSVModal] = useState(false)
     const [showPrizeListModal, setShowPrizeListModal] = useState(false)
     const [showParticipantListModal, setShowParticipantListModal] = useState(false)
-    const [showEditPrizeModal, setShowEditPrizeModal] = useState(false)
-    const [selectedPrize, setSelectedPrize] = useState<Prize | null>(null)
+    const [] = useState(false)
+    const [, setSelectedPrize] = useState<Prize | null>(null)
     const [showDrawingModal, setShowDrawingModal] = useState(false)
     const [showWinnerModal, setShowWinnerModal] = useState(false)
     const [currentWinner, setCurrentWinner] = useState<Winner | null>(null)
@@ -219,26 +218,6 @@ const AdminDashboard = () => {
         }, 5000);
     };
 
-    const handleSaveEditedPrize = async (editedPrize: Prize) => {
-        const response = await request(URL_PRIZE, "PUT", editedPrize);
-        if (response.status_code === 200) {
-            const updatedPrizes = prizes.map(prize =>
-                prize.id_prize === editedPrize.id_prize ? editedPrize : prize
-            )
-            setPrizes(updatedPrizes)
-            toast({
-                variant: "success",
-                title: "Premio actualizado",
-                description: "El premio ha sido actualizado exitosamente.",
-            })
-        } else {
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "No se pudo actualizar el premio. Por favor, inténtelo de nuevo.",
-            });
-        }
-    }
 
     const handleNextPrize = () => {
         setShowWinnerModal(false);
@@ -589,7 +568,7 @@ const AdminDashboard = () => {
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    onClick={() => handleDeleteWinner(winner.id_winner)}
+                                                    onClick={() => handleDeleteWinner(winner.id_winner ? winner.id_winner : 0)}
                                                     className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
                                                 >
                                                     <Trash2 className="h-4 w-4" />

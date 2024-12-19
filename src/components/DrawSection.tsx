@@ -10,17 +10,13 @@ interface DrawSectionProps {
 }
 
 export function DrawSection({ prizes, onSelectPrize }: DrawSectionProps) {
-    const [selectedPrize, setSelectedPrize] = useState<Prize | null>(null)
+    const [, setSelectedPrize] = useState<Prize | null>(null)
 
     const handleSelectPrize = (prize: Prize) => {
         setSelectedPrize(prize)
         onSelectPrize(prize)
     }
 
-    const playSound = (type: 'start' | 'win') => {
-        const audio = new Audio(type === 'start' ? '/sounds/countdown.mp3' : '/sounds/winner.mp3')
-        audio.play()
-    }
 
     return (
         <div className="space-y-12">
