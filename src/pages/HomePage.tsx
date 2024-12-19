@@ -10,7 +10,14 @@ import { User2, Lock, ChevronDown, Eye, EyeOff } from 'lucide-react'
 import { Checkbox } from "@/components/ui/checkbox"
 
 import { request } from '@/services/index'
-import { URL_LOGIN } from '@/hooks/constants/index'
+import { URL_LOGIN } from '@/constants/index'
+import { AuroraBorealis } from '@/components/AuroraBorealis'
+import { SnowEffect } from '@/components/SnowEffect'
+import { Countdown } from '@/components/Countdown'
+import { StylizedClock } from '@/components/StylizedClock'
+import { ParticleEffect } from '@/components/ParticleEffect'
+
+import '@/styles/fonts.css'
 
 const HomePage = () => {
     const [showLogin, setShowLogin] = useState(false)
