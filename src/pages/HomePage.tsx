@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '@/hooks/use-toast'
-import { User2, Lock, ChevronDown, Eye, EyeOff } from 'lucide-react'
+import { User2, Lock, ChevronDown, Eye, EyeOff, Search } from 'lucide-react'
 import { Checkbox } from "@/components/ui/checkbox"
 
 import { request } from '@/services/index'
@@ -16,6 +16,7 @@ import { SnowEffect } from '@/components/SnowEffect'
 import { Countdown } from '@/components/Countdown'
 import { StylizedClock } from '@/components/StylizedClock'
 import { ParticleEffect } from '@/components/ParticleEffect'
+import { LookupModal } from '@/components/LookupModal'
 
 import '@/styles/fonts.css'
 
@@ -26,6 +27,7 @@ const HomePage = () => {
     const [showPassword, setShowPassword] = useState(false)
     const [rememberMe, setRememberMe] = useState(false)
     const [scrollY, setScrollY] = useState(0)
+    const [showLookupModal, setShowLookupModal] = useState(false)
     const navigate = useNavigate()
     const { toast } = useToast()
 
@@ -196,6 +198,19 @@ const HomePage = () => {
                                                     Administrador
                                                 </Button>
                                             </motion.div>
+                                            <motion.div
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                            >
+                                                <Button
+                                                    onClick={() => setShowLookupModal(true)}
+                                                    variant="outline"
+                                                    className="w-full border-white/10 text-white hover:bg-white/10 py-5 text-base rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                                                >
+                                                    <Search className="mr-2 h-4 w-4" />
+                                                    Buscar Número de Sorteo
+                                                </Button>
+                                            </motion.div>
                                         </motion.div>
                                     ) : (
                                         <motion.form
@@ -283,6 +298,8 @@ const HomePage = () => {
             >
                 <ChevronDown className="animate-bounce" />
             </motion.div>
+
+            <LookupModal isOpen={showLookupModal} onOpenChange={setShowLookupModal} />
         </div>
     )
 }
