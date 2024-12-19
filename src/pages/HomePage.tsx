@@ -1,24 +1,54 @@
-import { useState } from 'react'
+'use client'
+
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '@/hooks/use-toast'
-import { User2, Lock, Home } from 'lucide-react'
+import { User2, Lock, ChevronDown, Eye, EyeOff } from 'lucide-react'
+import { Checkbox } from "@/components/ui/checkbox"
 
 import { request } from '@/services/index'
 import { URL_LOGIN } from '@/hooks/constants/index'
+import { AuroraBorealis } from '@/components/AuroraBorealis'
+import { SnowEffect } from '@/components/SnowEffect'
+import { Countdown } from '@/components/Countdown'
+import { StylizedClock } from '@/components/StylizedClock'
+import { ParticleEffect } from '@/components/ParticleEffect'
+
+import '@/styles/fonts.css'
 
 const HomePage = () => {
     const [showLogin, setShowLogin] = useState(false)
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
+    const [rememberMe, setRememberMe] = useState(false)
+    const [scrollY, setScrollY] = useState(0)
     const navigate = useNavigate()
     const { toast } = useToast()
 
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const eventDate = new Date(2024, 11, 21, 15, 0, 0)
 
+    useEffect(() => {
+        const handleScroll = () => setScrollY(window.scrollY)
+        window.addEventListener('scroll', handleScroll)
+        return () => window.removeEventListener('scroll', handleScroll)
+    }, [])
+
+    useEffect(() => {
+        const savedCredentials = localStorage.getItem('loginCredentials')
+        if (savedCredentials) {
+            const { username, password } = JSON.parse(savedCredentials)
+            setUsername(username)
+            setPassword(password)
+            setRememberMe(true)
+        }
+    }, [])
+
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault()
         const loginData = {
             grant_type: 'password',
             username: username,
@@ -26,142 +56,233 @@ const HomePage = () => {
             scope: '',
             client_id: 'string',
             client_secret: 'string'
-        };
+        }
 
         const response = await request(
             URL_LOGIN,
             'POST',
             loginData,
             'application/x-www-form-urlencoded'
-        );
+        )
 
         if (response.status_code === 200) {
+            if (rememberMe) {
+                localStorage.setItem('loginCredentials', JSON.stringify({ username, password }))
+            } else {
+                localStorage.removeItem('loginCredentials')
+            }
             toast({
                 title: "¡Bienvenido!",
                 description: "Has iniciado sesión exitosamente.",
-            });
-
-            // Navegar usando el enrutador de tu aplicación
-            navigate("/admin");
+            })
+            navigate("/admin")
         } else {
             toast({
                 title: "Error de autenticación",
                 description: response.data.detail || "Usuario o contraseña incorrectos.",
                 variant: "destructive",
-            });
+            })
         }
-    };
+    }
 
     return (
-        <div className="min-h-screen bg-[#1a237e] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]">
-            <div className="absolute inset-0 overflow-hidden">
-                {[...Array(100)].map((_, i) => (
-                    <div
-                        key={i}
-                        className="absolute h-[1px] w-[1px] bg-white rounded-full"
-                        style={{
-                            top: `${Math.random() * 100}%`,
-                            left: `${Math.random() * 100}%`,
-                            opacity: Math.random(),
-                            animation: `twinkle ${Math.random() * 5 + 3}s linear infinite`
-                        }}
-                    />
-                ))}
-            </div>
+        <div className="relative min-h-screen overflow-hidden">
+            <AuroraBorealis />
+            <div className="fixed inset-0 bg-black/10 backdrop-blur-sm z-[1]"></div>
+            <SnowEffect />
+            <ParticleEffect />
 
             <div className="relative z-10 flex min-h-screen items-center justify-center p-4">
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5 }}
-                    className="w-full max-w-md"
+                    className="w-full max-w-5xl"
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 1 }}
                 >
-                    <div className="mb-8 flex justify-center space-x-4">
-                        <img src="/forza-logo.png" alt="Forza Logo" className="h-12" />
-                        <img src="/gestar-logo.png" alt="Gestar Logo" className="h-12" />
-                    </div>
+                    <motion.div
+                        className="mb-16 text-center"
+                        style={{ y: scrollY * 0.5 }}
+                    >
+                        <motion.h1
+                            className="text-9xl font-normal text-white mb-8"
+                            initial={{ opacity: 0, y: -50 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2, duration: 0.8 }}
+                            style={{
+                                fontFamily: "'Great Vibes', cursive",
+                                textShadow: '0 0 10px rgba(255,255,255,0.5), 0 0 20px rgba(255,255,255,0.3), 0 0 30px rgba(255,255,255,0.2)',
+                            }}
+                        >
+                            ¡Fiesta de Fin de Año!
+                        </motion.h1>
+                        <motion.p
+                            className="text-xl text-white/80"
+                            initial={{ opacity: 0, y: -30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4, duration: 0.8 }}
+                        >
+                            Únete a la celebración más espectacular del año
+                        </motion.p>
+                    </motion.div>
 
-                    <div className="rounded-2xl bg-white/10 backdrop-blur-lg border border-white/20 p-8 shadow-2xl">
-                        <h1 className="text-4xl font-bold text-center text-white mb-2">
-                            ¡Bienvenido a la Fiesta de Fin de año!
-                        </h1>
-                        <p className="text-center text-white/80 mb-8">
-                            Seleccione su rol para continuar
-                        </p>
+                    <div className="flex justify-between items-start">
+                        <motion.div
+                            className="w-1/2 pr-8"
+                            initial={{ opacity: 0, x: -50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.8 }}
+                        >
+                            <div className="mb-8">
+                                <StylizedClock date={eventDate} />
+                            </div>
+                            <Countdown targetDate={eventDate} />
+                        </motion.div>
 
-                        <AnimatePresence mode="wait">
-                            {!showLogin ? (
-                                <motion.div
-                                    key="buttons"
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -20 }}
-                                    className="space-y-4"
-                                >
-                                    <Button
-                                        onClick={() => navigate('/participant')}
-                                        className="w-full bg-blue-500 hover:bg-blue-600 text-white py-6 text-lg rounded-xl transition-all duration-200 transform hover:scale-105"
-                                    >
-                                        <User2 className="mr-2 h-5 w-5" />
-                                        Participante
-                                    </Button>
-                                    <Button
-                                        onClick={() => setShowLogin(true)}
-                                        variant="outline"
-                                        className="w-full border-white/20 text-white hover:bg-white/10 py-6 text-lg rounded-xl transition-all duration-200 transform hover:scale-105"
-                                    >
-                                        <Lock className="mr-2 h-5 w-5" />
-                                        Administrador
-                                    </Button>
-                                </motion.div>
-                            ) : (
-                                <motion.form
-                                    key="login"
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -20 }}
-                                    onSubmit={handleLogin}
-                                    className="space-y-4"
-                                >
-                                    <div className="space-y-2">
-                                        <Input
-                                            type="text"
-                                            placeholder="Usuario"
-                                            value={username}
-                                            onChange={(e) => setUsername(e.target.value)}
-                                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl py-6"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Input
-                                            type="password"
-                                            placeholder="Contraseña"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            className="bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl py-6"
-                                        />
-                                    </div>
-                                    <Button
-                                        type="submit"
-                                        className="w-full bg-blue-500 hover:bg-blue-600 text-white py-6 text-lg rounded-xl transition-all duration-200 transform hover:scale-105"
-                                    >
-                                        Iniciar sesión
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        onClick={() => setShowLogin(false)}
-                                        className="w-full text-white hover:bg-white/10 py-6 text-lg rounded-xl transition-all duration-200"
-                                    >
-                                        <Home className="mr-2 h-5 w-5" />
-                                        Volver al inicio
-                                    </Button>
-                                </motion.form>
-                            )}
-                        </AnimatePresence>
+                        <motion.div
+                            initial={{ opacity: 0, x: 50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.8 }}
+                            className="w-2/5"
+                        >
+                            <div className="rounded-3xl bg-white/5 backdrop-blur-sm border border-white/10 p-6 shadow-2xl">
+                                <div className="mb-8 flex justify-center space-x-4">
+                                    <motion.img
+                                        src="/forza-logo.png"
+                                        alt="Forza Logo"
+                                        className="h-12 brightness-200 contrast-200"
+                                        whileHover={{ scale: 1.1, rotate: 5 }}
+                                        whileTap={{ scale: 0.9 }}
+                                    />
+                                    <motion.img
+                                        src="/gestar-logo.png"
+                                        alt="Gestar Logo"
+                                        className="h-12 brightness-200 contrast-200"
+                                        whileHover={{ scale: 1.1, rotate: -5 }}
+                                        whileTap={{ scale: 0.9 }}
+                                    />
+                                </div>
+
+                                <AnimatePresence mode="wait">
+                                    {!showLogin ? (
+                                        <motion.div
+                                            key="buttons"
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -20 }}
+                                            className="space-y-4"
+                                        >
+                                            <motion.div
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                            >
+                                                <Button
+                                                    onClick={() => navigate('/participant')}
+                                                    className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white py-5 text-base rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                                                >
+                                                    <User2 className="mr-2 h-4 w-4" />
+                                                    Participante
+                                                </Button>
+                                            </motion.div>
+                                            <motion.div
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                            >
+                                                <Button
+                                                    onClick={() => setShowLogin(true)}
+                                                    variant="outline"
+                                                    className="w-full border-white/10 text-white hover:bg-white/10 py-5 text-base rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                                                >
+                                                    <Lock className="mr-2 h-4 w-4" />
+                                                    Administrador
+                                                </Button>
+                                            </motion.div>
+                                        </motion.div>
+                                    ) : (
+                                        <motion.form
+                                            key="login"
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -20 }}
+                                            onSubmit={handleLogin}
+                                            className="space-y-4"
+                                        >
+                                            <Input
+                                                type="text"
+                                                placeholder="Usuario"
+                                                value={username}
+                                                onChange={(e) => setUsername(e.target.value)}
+                                                className="bg-white/10 border-white/10 text-white placeholder:text-white/50 rounded-xl py-5"
+                                            />
+                                            <div className="relative">
+                                                <Input
+                                                    type={showPassword ? "text" : "password"}
+                                                    placeholder="Contraseña"
+                                                    value={password}
+                                                    onChange={(e) => setPassword(e.target.value)}
+                                                    className="bg-white/10 border-white/10 text-white placeholder:text-white/50 rounded-xl py-5 pr-10"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white"
+                                                >
+                                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                                </button>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <Checkbox
+                                                    id="rememberMe"
+                                                    checked={rememberMe}
+                                                    onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                                                />
+                                                <label
+                                                    htmlFor="rememberMe"
+                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-white"
+                                                >
+                                                    Recordar credenciales
+                                                </label>
+                                            </div>
+                                            <motion.div
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                            >
+                                                <Button
+                                                    type="submit"
+                                                    className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white py-5 text-base rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                                                >
+                                                    Iniciar sesión
+                                                </Button>
+                                            </motion.div>
+                                            <motion.div
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                            >
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    onClick={() => setShowLogin(false)}
+                                                    className="w-full text-white hover:bg-white/10 py-5 text-base rounded-xl transition-all duration-300"
+                                                >
+                                                    Volver al inicio
+                                                </Button>
+                                            </motion.div>
+                                        </motion.form>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        </motion.div>
                     </div>
                 </motion.div>
             </div>
+
+            <motion.div
+                className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white/50"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1, duration: 0.8 }}
+            >
+                <ChevronDown className="animate-bounce" />
+            </motion.div>
         </div>
     )
 }
