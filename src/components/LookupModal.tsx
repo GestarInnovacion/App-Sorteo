@@ -36,7 +36,7 @@ export function LookupModal({ isOpen, onOpenChange }: LookupModalProps) {
     }, [isOpen])
 
     useEffect(() => {
-        if (searchTerm.length === 10) { // Asumiendo que la cédula tiene 10 dígitos
+        if (searchTerm.length > 0) {
             const foundParticipant = participants.find(p => p.cedula === searchTerm)
             if (foundParticipant) {
                 setSelectedParticipant(foundParticipant)
@@ -52,7 +52,7 @@ export function LookupModal({ isOpen, onOpenChange }: LookupModalProps) {
     }, [searchTerm, participants])
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/\D/g, '').slice(0, 10) // Solo permite números y máximo 10 dígitos
+        const value = e.target.value.replace(/\D/g, '') // Solo permite números
         setSearchTerm(value)
     }
 
@@ -120,7 +120,7 @@ export function LookupModal({ isOpen, onOpenChange }: LookupModalProps) {
                 )}
                 {!selectedParticipant && !error && searchTerm.length > 0 && (
                     <p className="text-center text-white/70 mt-4">
-                        {searchTerm.length < 10 ? `Faltan ${10 - searchTerm.length} dígitos` : 'Buscando...'}
+                        Buscando...
                     </p>
                 )}
                 {!selectedParticipant && !error && searchTerm.length === 0 && (

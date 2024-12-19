@@ -182,7 +182,7 @@ const HomePage = () => {
                                                     className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white py-5 text-base rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
                                                 >
                                                     <User2 className="mr-2 h-4 w-4" />
-                                                    Participante
+                                                    Registrar Participante
                                                 </Button>
                                             </motion.div>
                                             <motion.div

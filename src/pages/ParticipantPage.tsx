@@ -3,11 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
-import { Home, ArrowRight, Search } from 'lucide-react'
+import { Home, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { SuccessModal } from '@/components/SuccessModal'
 import { ErrorModal } from '@/components/ErrorModal'
-import { LookupModal } from '@/components/LookupModal'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Participant } from '../types'
 
@@ -31,7 +30,7 @@ const ParticipantPage = () => {
     })
     const [showSuccessModal, setShowSuccessModal] = useState(false)
     const [showErrorModal, setShowErrorModal] = useState(false)
-    const [showLookupModal, setShowLookupModal] = useState(false)
+    const [] = useState(false)
     const [existingParticipant, setExistingParticipant] = useState<FormData | null>(null)
     const [errorField, setErrorField] = useState<'cedula' | 'name' | 'ticket_number'>('cedula')
     const { toast } = useToast()
@@ -254,14 +253,6 @@ const ParticipantPage = () => {
                                 Inicio
                             </Button>
                             <Button
-                                variant="ghost"
-                                onClick={() => setShowLookupModal(true)}
-                                className="text-white hover:bg-white/10"
-                            >
-                                <Search className="mr-2 h-5 w-5" />
-                                Buscar Número
-                            </Button>
-                            <Button
                                 onClick={handleNext}
                                 className="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white"
                             >
@@ -302,15 +293,6 @@ const ParticipantPage = () => {
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={showLookupModal} onOpenChange={setShowLookupModal}>
-                <DialogContent>
-                    <DialogTitle>Buscar Número de Sorteo</DialogTitle>
-                    <LookupModal
-                        isOpen={showLookupModal}
-                        onOpenChange={setShowLookupModal}
-                    />
-                </DialogContent>
-            </Dialog>
         </div>
     )
 }
