@@ -135,4 +135,3 @@ export function WinnerModal({ isOpen, onOpenChange, winner, onNextPrize }: Winne
         </Dialog>
     )
 }
-
