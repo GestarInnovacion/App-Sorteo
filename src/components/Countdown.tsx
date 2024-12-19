@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 
 const CountdownUnit = ({ value, label }: { value: number, label: string }) => (
     <motion.div

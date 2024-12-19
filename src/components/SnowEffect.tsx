@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 
-const Snowflake = ({ delay }: { delay: number }) => {
+const Snowflake = ({ }: { delay: number }) => {
     const [xPosition, setXPosition] = useState(Math.random() * 100)
     const size = Math.random() * 4 + 4
 
