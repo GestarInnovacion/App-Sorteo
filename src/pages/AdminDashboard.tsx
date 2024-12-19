@@ -15,7 +15,7 @@ import { Prize, Participant, Winner } from '../types'
 import { ResetWarningModal } from '@/components/ResetWarningModal'
 
 import { request } from '@/services/index'
-import { URL_PARTICIPANT, URL_PRIZE, URL_WINNER } from '@/hooks/constants/index'
+import { URL_PARTICIPANT, URL_PRIZE, URL_WINNER, URL_PRIZE_BULK, URL_WINNER_FULL, URL_WINNER_FILTER } from '@/constants/index'
 
 const AdminDashboard = () => {
     const [prizes, setPrizes] = useState<Prize[]>([])
@@ -75,29 +75,33 @@ const AdminDashboard = () => {
         }
     }
 
-    const handleUploadCSV = (file: File) => {
+    const handleUploadCSV = async (file: File) => {
         const reader = new FileReader()
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             const text = e.target?.result as string
             const rows = text.split('\n').filter(row => row.trim() !== '')
-            const newPrizes: Prize[] = rows.map((row, index) => {
+            const newPrizes: Prize[] = rows.map((row) => {
                 const [name, range_start, range_end] = row.split(';').map(field => field.trim())
                 return {
-                    id_prize: prizes.length + index + 1,
                     name,
                     range_start: parseInt(range_start),
                     range_end: parseInt(range_end),
                     sorteado: false
                 }
             })
-            const updatedPrizes = [...prizes, ...newPrizes]
-            setPrizes(updatedPrizes)
-            localStorage.setItem('prizes', JSON.stringify(updatedPrizes))
-            toast({
-                variant: "success",
-                title: "CSV cargado",
-                description: `Se han agregado ${newPrizes.length} premios exitosamente.`,
-            })
+            
+            const result = await request(URL_PRIZE_BULK, "POST", {"prizes":newPrizes})
+
+            if(result.status_code === 200) {
+                const updatedPrizes = [...prizes, ...result.data]
+                setPrizes(updatedPrizes)
+
+                toast({
+                    variant: "success",
+                    title: "CSV cargado",
+                    description: `Se han agregado ${newPrizes.length} premios exitosamente.`,
+                })
+            }
         }
         reader.readAsText(file)
     }
@@ -234,11 +238,9 @@ const AdminDashboard = () => {
     };
 
     const handleClearWinners = async () => {
-        const responseResetWinners = await request(URL_WINNER, "DELETE", { all: true });
-        const responseResetPrizes = await request(URL_PRIZE, "PUT", { all: true, sorteado: false });
-        const responseResetParticipants = await request(URL_PARTICIPANT, "PUT", { all: true, active: true });
+        const responseResetWinners = await request(URL_WINNER_FULL, "DELETE");
 
-        if (responseResetWinners.status_code === 200 && responseResetPrizes.status_code === 200 && responseResetParticipants.status_code === 200) {
+        if (responseResetWinners.status_code === 200) {
             const restoredPrizes = prizes.map(prize => ({ ...prize, sorteado: false }));
             setPrizes(restoredPrizes);
 
@@ -265,11 +267,12 @@ const AdminDashboard = () => {
         const winnerToDelete = winners.find(w => w.id_winner === winnerId);
         if (!winnerToDelete) return;
 
-        const responseDeleteWinner = await request(URL_WINNER, "DELETE", { id_winner: winnerId });
-        const responseUpdatePrize = await request(URL_PRIZE, "PUT", { id_prize: winnerToDelete.id_prize, sorteado: false });
-        const responseUpdateParticipant = await request(URL_PARTICIPANT, "PUT", { id_participant: winnerToDelete.id_participant, active: true });
 
-        if (responseDeleteWinner.status_code === 200 && responseUpdatePrize.status_code === 200 && responseUpdateParticipant.status_code === 200) {
+        const responseDeleteWinner = await request(URL_WINNER_FILTER, "DELETE", { "id_winner": winnerId,
+                                                                            "id_participant": winnerToDelete.id_participant,
+                                                                            "id_prize": winnerToDelete.id_prize});
+
+        if (responseDeleteWinner.status_code === 200) {
             const updatedWinners = winners.filter(w => w.id_winner !== winnerId);
             setWinners(updatedWinners);
 

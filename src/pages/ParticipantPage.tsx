@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Participant } from '../types'
 
 import { request } from '@/services/index'
-import { URL_PARTICIPANT } from '@/hooks/constants/index'
+import { URL_PARTICIPANT } from '@/constants/index'
 
 interface FormData {
     cedula: string

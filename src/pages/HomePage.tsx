@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast'
 import { User2, Lock, Home } from 'lucide-react'
 
 import { request } from '@/services/index'
-import { URL_LOGIN } from '@/hooks/constants/index'
+import { URL_LOGIN } from '@/constants/index'
 
 const HomePage = () => {
     const [showLogin, setShowLogin] = useState(false)
