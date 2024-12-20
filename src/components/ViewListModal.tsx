@@ -17,27 +17,28 @@ interface ViewListModalProps {
     onDelete: (id: number) => void
 }
 
-export function ViewListModal({ isOpen, onOpenChange, items, type, onDelete }: ViewListModalProps) {
+export function ViewListModal({ isOpen, onOpenChange, items = [], type, onDelete }: ViewListModalProps) {
     const [searchQuery, setSearchQuery] = useState('')
-    const [filteredItems, setFilteredItems] = useState(items)
+    const [filteredItems, setFilteredItems] = useState<PrizeOrParticipant[]>(items)
 
     useEffect(() => {
         const filtered = items.filter((item) => {
-            if (type === 'prizes') {
-                const prize = item as Prize
+            if (type === 'prizes' && 'name' in item) {
+                const prize = item as Prize;
                 return (
-                    prize.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    prize.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     `${prize.range_start}-${prize.range_end}`.includes(searchQuery)
-                )
-            } else {
-                const participant = item as Participant
+                );
+            } else if (type === 'participants' && 'name' in item) {
+                const participant = item as Participant;
                 return (
-                    participant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    participant.cedula.includes(searchQuery) ||
-                    participant.ticket_number.includes(searchQuery)
-                )
+                    participant.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    participant.cedula?.includes(searchQuery) ||
+                    participant.ticket_number?.includes(searchQuery)
+                );
             }
-        })
+            return false;
+        });
         setFilteredItems(filtered)
     }, [searchQuery, items, type])
 
@@ -118,7 +119,7 @@ function PrizeItem({ prize, onDelete }: { prize: Prize; onDelete: (id: number) =
             <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                     <Gift className="h-5 w-5 text-purple-300" />
-                    <h3 className="text-lg font-semibold text-white truncate">{prize.name}</h3>
+                    <h3 className="text-lg font-semibold text-white truncate">{prize.name || 'Unnamed Prize'}</h3>
                 </div>
                 <div className="flex items-center space-x-2">
                     <Hash className="h-4 w-4 text-blue-300" />
@@ -203,15 +204,15 @@ function ParticipantItem({ participant, onDelete }: { participant: Participant; 
             <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                     <User className="h-5 w-5 text-blue-300" />
-                    <h3 className="text-lg font-semibold text-white truncate">{participant.name}</h3>
+                    <h3 className="text-lg font-semibold text-white truncate">{participant.name || 'Unnamed Participant'}</h3>
                 </div>
                 <div className="flex items-center space-x-2">
                     <CreditCard className="h-4 w-4 text-green-300" />
-                    <p className="text-sm text-white/80 truncate">{participant.cedula}</p>
+                    <p className="text-sm text-white/80 truncate">{participant.cedula || 'No ID'}</p>
                 </div>
                 <div className="flex items-center space-x-2">
                     <Ticket className="h-4 w-4 text-yellow-300" />
-                    <p className="text-sm text-white/80">{participant.ticket_number}</p>
+                    <p className="text-sm text-white/80">{participant.ticket_number || 'No ticket'}</p>
                 </div>
             </div>
             <div className="flex justify-between space-x-2">
