@@ -159,8 +159,7 @@ const AdminDashboard = () => {
                     return {
                         name,
                         cedula,
-                        active: false,
-                        asistencia: false
+                        active: false
                     };
                 }
                 return null; 
