@@ -10,12 +10,13 @@ import { Prize } from '../types'
 interface AddPrizeModalProps {
     isOpen: boolean
     onOpenChange: (open: boolean) => void
-    onAddPrize: (prize: Omit<Prize, 'id_prize' | 'sorteado'>) => void
+    onAddSuccess: (prize: Omit<Prize, 'id_prize' | 'sorteado'>) => Promise<void>
 }
 
-export function AddPrizeModal({ isOpen, onOpenChange, onAddPrize }: AddPrizeModalProps) {
+export function AddPrizeModal({ isOpen, onOpenChange, onAddSuccess }: AddPrizeModalProps) {
     const [newPrize, setNewPrize] = useState({ name: '', range_start: '', range_end: '' })
     const [errors, setErrors] = useState({ name: false, range_start: false, range_end: false })
+    const [isAdding, setIsAdding] = useState(false)
 
     const validateFields = () => {
         const newErrors = {
@@ -27,15 +28,23 @@ export function AddPrizeModal({ isOpen, onOpenChange, onAddPrize }: AddPrizeModa
         return !Object.values(newErrors).some(error => error)
     }
 
-    const handleAddPrize = () => {
+    const handleAddPrize = async () => {
         if (validateFields()) {
-            onAddPrize({
-                name: newPrize.name,
-                range_start: parseInt(newPrize.range_start),
-                range_end: parseInt(newPrize.range_end)
-            })
-            setNewPrize({ name: '', range_start: '', range_end: '' })
-            onOpenChange(false)
+            setIsAdding(true)
+            try {
+                await onAddSuccess({
+                    name: newPrize.name,
+                    range_start: parseInt(newPrize.range_start),
+                    range_end: parseInt(newPrize.range_end)
+                })
+                setNewPrize({ name: '', range_start: '', range_end: '' })
+                onOpenChange(false)
+            } catch (error) {
+                console.error('Error adding prize:', error)
+                // You might want to show an error message to the user here
+            } finally {
+                setIsAdding(false)
+            }
         }
     }
 
@@ -117,10 +126,16 @@ export function AddPrizeModal({ isOpen, onOpenChange, onAddPrize }: AddPrizeModa
                             <Button
                                 onClick={handleAddPrize}
                                 className="w-full bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white transition-colors duration-200 rounded-xl"
-                                disabled={!newPrize.name || !newPrize.range_start || !newPrize.range_end}
+                                disabled={!newPrize.name || !newPrize.range_start || !newPrize.range_end || isAdding}
                             >
-                                <PlusCircle className="mr-2 h-5 w-5" />
-                                Agregar Premio
+                                {isAdding ? (
+                                    'Agregando...'
+                                ) : (
+                                    <>
+                                        <PlusCircle className="mr-2 h-5 w-5" />
+                                        Agregar Premio
+                                    </>
+                                )}
                             </Button>
                         </motion.div>
                     </DialogContent>

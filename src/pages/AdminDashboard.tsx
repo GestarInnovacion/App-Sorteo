@@ -8,6 +8,7 @@ import { Home, LogOut, Gift, Users, Trophy, Plus, Upload, List, Trash2, ChevronL
 import { useToast } from '@/hooks/use-toast'
 import { AddPrizeModal } from '@/components/AddPrizeModal'
 import { UploadCSVModal } from '@/components/UploadCSVModal'
+import { UploadParticipantsCSVModal } from '@/components/UploadParticipantsCSVModal'
 import { ViewListModal } from '@/components/ViewListModal'
 import { Card, CardContent } from '@/components/ui/card'
 import { DrawingModal } from '@/components/DrawingModal'
@@ -16,7 +17,6 @@ import { DrawSection } from '@/components/DrawSection'
 import { Prize, Participant, Winner } from '../types'
 import { ResetWarningModal } from '@/components/ResetWarningModal'
 import CustomLoader from '@/components/CustomLoader'
-import { UploadParticipantsModal } from '@/components/UploadParticipantsModal'
 
 import { request } from '@/services/index'
 import { URL_PARTICIPANT, URL_PRIZE, URL_WINNER, URL_PRIZE_BULK, URL_WINNER_FULL, URL_WINNER_FILTER } from '@/constants/index'
@@ -27,15 +27,14 @@ const AdminDashboard = () => {
     const [winners, setWinners] = useState<Winner[]>([])
     const [showAddPrizeModal, setShowAddPrizeModal] = useState(false)
     const [showUploadCSVModal, setShowUploadCSVModal] = useState(false)
+    const [showUploadParticipantsCSVModal, setShowUploadParticipantsCSVModal] = useState(false)
     const [showPrizeListModal, setShowPrizeListModal] = useState(false)
     const [showParticipantListModal, setShowParticipantListModal] = useState(false)
-    const [selectedPrize, setSelectedPrize] = useState<Prize | null>(null)
     const [showDrawingModal, setShowDrawingModal] = useState(false)
     const [showWinnerModal, setShowWinnerModal] = useState(false)
     const [currentWinner, setCurrentWinner] = useState<Winner | null>(null)
     const [isLeftPanelVisible, setIsLeftPanelVisible] = useState(true)
     const [showResetWarningModal, setShowResetWarningModal] = useState(false)
-    const [showUploadParticipantsModal, setShowUploadParticipantsModal] = useState(false)
     const navigate = useNavigate()
     const { toast } = useToast()
 
@@ -97,6 +96,7 @@ const AdminDashboard = () => {
     const handleAddPrize = async (newPrize: Omit<Prize, 'id_prize' | 'sorteado'>) => {
         const prize: Prize = {
             ...newPrize,
+            id_prize: 0, // This will be replaced by the backend
             sorteado: false
         }
 
@@ -118,13 +118,12 @@ const AdminDashboard = () => {
         reader.onload = async (e) => {
             const text = e.target?.result as string
             const rows = text.split('\n').filter(row => row.trim() !== '')
-            const newPrizes: Prize[] = rows.map((row) => {
+            const newPrizes: Omit<Prize, 'id_prize' | 'sorteado'>[] = rows.map((row) => {
                 const [name, range_start, range_end] = row.split(';').map(field => field.trim())
                 return {
                     name,
                     range_start: parseInt(range_start),
                     range_end: parseInt(range_end),
-                    sorteado: false
                 }
             })
 
@@ -138,6 +137,44 @@ const AdminDashboard = () => {
                     variant: "success",
                     title: "CSV cargado",
                     description: `Se han agregado ${newPrizes.length} premios exitosamente.`,
+                })
+            }
+        }
+        reader.readAsText(file)
+    }
+
+    const handleUploadParticipantsCSV = async (file: File) => {
+        const reader = new FileReader()
+        reader.onload = async (e) => {
+            const text = e.target?.result as string
+            const rows = text.split('\n').filter(row => row.trim() !== '')
+            const newParticipants: Omit<Participant, 'id_participant'>[] = rows.map((row) => {
+                const [name, cedula, ticket_number] = row.split(';').map(field => field.trim())
+                return {
+                    name,
+                    cedula,
+                    ticket_number,
+                    active: true,
+                    asistencia: false
+                }
+            })
+
+            const result = await request(URL_PARTICIPANT, "POST", { "participants": newParticipants })
+
+            if (result.status_code === 200) {
+                const updatedParticipants = [...participants, ...result.data]
+                setParticipants(updatedParticipants)
+
+                toast({
+                    variant: "success",
+                    title: "CSV cargado",
+                    description: `Se han agregado ${newParticipants.length} participantes exitosamente.`,
+                })
+            } else {
+                toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: "Hubo un problema al cargar los participantes. Por favor, inténtelo de nuevo.",
                 })
             }
         }
@@ -184,19 +221,18 @@ const AdminDashboard = () => {
 
     const handleSelectPrize = async (prize: Prize) => {
         const availableParticipants = participants.filter(p =>
-            p.active && parseInt(p.ticket_number) >= prize.range_start && parseInt(p.ticket_number) <= prize.range_end
+            p.active && p.asistencia && parseInt(p.ticket_number) >= prize.range_start && parseInt(p.ticket_number) <= prize.range_end
         )
 
         if (availableParticipants.length === 0) {
             toast({
                 title: "No se puede realizar el sorteo",
-                description: `No hay participantes disponibles en el rango ${prize.range_start} - ${prize.range_end} para el premio "${prize.name}".`,
+                description: `No hay participantes elegibles en el rango ${prize.range_start} - ${prize.range_end} para el premio "${prize.name}".`,
                 variant: "destructive",
             })
             return
         }
 
-        setSelectedPrize(prize)
         setShowDrawingModal(true)
 
         setTimeout(async () => {
@@ -376,59 +412,6 @@ const AdminDashboard = () => {
         }
     }
 
-    const handleUploadParticipantsSuccess = () => {
-        //fetchParticipants()  //This function is not defined.  Assuming it fetches participant data and updates state.
-        const fetchParticipants = async () => {
-            try {
-                const responseParticipants = await request(URL_PARTICIPANT, 'GET')
-                if (responseParticipants.status_code === 200) {
-                    setParticipants(responseParticipants.data)
-                } else {
-                    toast({
-                        variant: "destructive",
-                        title: "Error",
-                        description: "No se pudieron cargar los participantes.",
-                    })
-                }
-            } catch (error) {
-                console.error("Error fetching participants:", error);
-                toast({
-                    variant: "destructive",
-                    title: "Error",
-                    description: "No se pudieron cargar los participantes.",
-                })
-            }
-        }
-        fetchParticipants();
-    }
-
-    const handleAddPrizeSuccess = () => {
-        //fetchPrizes() //This function is not defined. Assuming it fetches prize data and updates state.
-        const fetchPrizes = async () => {
-            try {
-                const responsePrize = await request(URL_PRIZE, 'GET')
-                if (responsePrize.status_code === 200) {
-                    setPrizes(responsePrize.data)
-                } else {
-                    toast({
-                        variant: "destructive",
-                        title: "Error",
-                        description: "No se pudieron cargar los premios.",
-                    })
-                }
-            } catch (error) {
-                console.error("Error fetching prizes:", error);
-                toast({
-                    variant: "destructive",
-                    title: "Error",
-                    description: "No se pudieron cargar los premios.",
-                })
-            }
-        }
-        fetchPrizes();
-    }
-
-
     return (
         <div className="min-h-screen relative overflow-hidden">
             {/* Fondo dinámico */}
@@ -569,7 +552,7 @@ const AdminDashboard = () => {
                                         </h2>
                                         <div className="space-y-4">
                                             <div className="grid grid-cols-2 gap-4">
-                                                <Button onClick={() => setShowUploadParticipantsModal(true)} className="w-full bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-300 hover:scale-105">
+                                                <Button onClick={() => setShowUploadParticipantsCSVModal(true)} className="w-full bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-300 hover:scale-105">
                                                     <Upload className="mr-2 h-5 w-5" />
                                                     Cargar CSV
                                                 </Button>
@@ -629,7 +612,9 @@ const AdminDashboard = () => {
                         >
                             <DrawSection
                                 prizes={prizes.filter(p => !p.sorteado)}
-                                onSelectPrize={handleSelectPrize} participants={[]} />
+                                participants={participants}
+                                onSelectPrize={handleSelectPrize}
+                            />
                         </motion.div>
 
                         {/* Right Sidebar */}
@@ -689,13 +674,19 @@ const AdminDashboard = () => {
             <AddPrizeModal
                 isOpen={showAddPrizeModal}
                 onOpenChange={setShowAddPrizeModal}
-                onAddPrize={handleAddPrize}
+                onAddSuccess={handleAddPrize}
             />
 
             <UploadCSVModal
                 isOpen={showUploadCSVModal}
                 onOpenChange={setShowUploadCSVModal}
                 onUploadCSV={handleUploadCSV}
+            />
+
+            <UploadParticipantsCSVModal
+                isOpen={showUploadParticipantsCSVModal}
+                onOpenChange={setShowUploadParticipantsCSVModal}
+                onUploadSuccess={handleUploadParticipantsCSV}
             />
 
             <ViewListModal
@@ -729,11 +720,6 @@ const AdminDashboard = () => {
                 isOpen={showResetWarningModal}
                 onOpenChange={setShowResetWarningModal}
                 onConfirmReset={handleTotalReset}
-            />
-            <UploadParticipantsModal
-                isOpen={showUploadParticipantsModal}
-                onOpenChange={setShowUploadParticipantsModal}
-                onUploadSuccess={handleUploadParticipantsSuccess}
             />
         </div>
     )

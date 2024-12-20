@@ -4,29 +4,17 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
 import { Upload, AlertCircle, FileText, X } from 'lucide-react'
-import Papa, { ParseResult } from 'papaparse'
 import { motion, AnimatePresence } from 'framer-motion'
-import { request } from '@/services/index'
-import { URL_PARTICIPANT } from '@/constants/index'
 
-interface Participant {
-    id_participant: number;
-    name: string;
-    cedula: string;
-    ticket_number: string;
-    active: boolean;
-    asistencia: boolean;
-}
-
-interface UploadParticipantsModalProps {
+interface UploadParticipantsCSVModalProps {
     isOpen: boolean
     onOpenChange: (open: boolean) => void
-    onUploadSuccess: () => void
+    onUploadSuccess: (file: File) => void
 }
 
-export function UploadParticipantsModal({ isOpen, onOpenChange, onUploadSuccess }: UploadParticipantsModalProps) {
+export function UploadParticipantsCSVModal({ isOpen, onOpenChange, onUploadSuccess }: UploadParticipantsCSVModalProps) {
     const [file, setFile] = useState<File | null>(null)
-    const [uploading, setUploading] = useState(false)
+    const [uploading] = useState(false)
     const { toast } = useToast()
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,46 +41,9 @@ export function UploadParticipantsModal({ isOpen, onOpenChange, onUploadSuccess 
             return
         }
 
-        setUploading(true)
-
-        Papa.parse(file, {
-            complete: async (results: ParseResult<any>) => {
-                const participants: Partial<Participant>[] = results.data.slice(1).map((row: any) => ({
-                    name: row[0],
-                    cedula: row[1],
-                    ticket_number: row[2],
-                    active: true,
-                    asistencia: false
-                }))
-
-                try {
-                    const response = await request(URL_PARTICIPANT, 'POST', participants)
-                    if (response.status_code === 201) {
-                        toast({
-                            title: "Éxito",
-                            description: "Los participantes se han cargado correctamente.",
-                        })
-                        onUploadSuccess()
-                        onOpenChange(false)
-                    } else {
-                        throw new Error(response.data.detail || "Error al cargar los participantes")
-                    }
-                } catch (error) {
-                    console.error('Error al cargar participantes:', error)
-                    toast({
-                        title: "Error",
-                        description: "Hubo un problema al cargar los participantes. Por favor, inténtalo de nuevo.",
-                        variant: "destructive",
-                    })
-                } finally {
-                    setUploading(false)
-                    setFile(null)
-                }
-            },
-            header: true,
-            skipEmptyLines: true,
-            delimiter: ';',
-        })
+        onUploadSuccess(file)
+        onOpenChange(false)
+        setFile(null)
     }
 
     return (
@@ -100,7 +51,7 @@ export function UploadParticipantsModal({ isOpen, onOpenChange, onUploadSuccess 
             <DialogContent className="sm:max-w-[425px] bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-3xl border-2 border-white/20 shadow-xl">
                 <DialogHeader>
                     <DialogTitle className="text-3xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-yellow-500">
-                        Cargar Participantes
+                        Cargar Participantes CSV
                     </DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-6 py-4">
