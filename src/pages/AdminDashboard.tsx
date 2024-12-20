@@ -152,14 +152,13 @@ const AdminDashboard = () => {
         
             // Filtrar participantes con campos vacíos (name, cedula o ticket_number)
             const newParticipants: Omit<Participant, 'id_participant'>[] = rows.map((row) => {
-                const [name, cedula, ticket_number] = row.split(';').map(field => field.trim());
+                const [name, cedula] = row.split(';').map(field => field.trim());
         
                 // Validar si alguno de los campos está vacío
-                if (name && cedula && ticket_number) {
+                if (name && cedula) {
                     return {
                         name,
                         cedula,
-                        ticket_number,
                         active: false,
                         asistencia: false
                     };
@@ -230,7 +229,7 @@ const AdminDashboard = () => {
 
     const handleSelectPrize = async (prize: Prize) => {
         const availableParticipants = participants.filter(p =>
-            p.active && p.asistencia && parseInt(p.ticket_number) >= prize.range_start && parseInt(p.ticket_number) <= prize.range_end
+            p.active && parseInt(p.ticket_number?p.ticket_number:"") >= prize.range_start && parseInt(p.ticket_number?p.ticket_number:"") <= prize.range_end
         )
 
         if (availableParticipants.length === 0) {
@@ -594,13 +593,13 @@ const AdminDashboard = () => {
                                                     </div>
                                                     <div className="text-center">
                                                         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm mb-2">
-                                                            <p className="text-xl font-bold text-white">{participants.filter(p => p.asistencia).length}</p>
+                                                            <p className="text-xl font-bold text-white">{participants.filter(p => p.ticket_number).length}</p>
                                                         </div>
                                                         <p className="text-xs text-white/80">Presentes</p>
                                                     </div>
                                                     <div className="text-center">
                                                         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm mb-2">
-                                                            <p className="text-xl font-bold text-white">{participants.filter(p => p.active && p.asistencia).length}</p>
+                                                            <p className="text-xl font-bold text-white">{participants.filter(p => p.active && p.ticket_number).length}</p>
                                                         </div>
                                                         <p className="text-xs text-white/80">Elegibles</p>
                                                     </div>

@@ -10,9 +10,8 @@ export interface Participant {
   id_participant: number;
   name: string;
   cedula: string;
-  ticket_number: string;
+  ticket_number?: string;
   active: boolean;
-  asistencia: boolean;
 }
 
 export type PrizeOrParticipant = Prize | Participant;
