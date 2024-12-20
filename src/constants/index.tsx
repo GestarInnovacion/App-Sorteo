@@ -4,6 +4,8 @@ export const URL_LOGIN = `${URL_BASE}/login`;
 export const URL_PROFILE = `${URL_BASE}/users/profile`;
 
 export const URL_PARTICIPANT = `${URL_BASE}/participants`;
+export const URL_PARTICIPANTS_BULK = `${URL_PARTICIPANT}/bulk`;
+
 export const URL_PRIZE = `${URL_BASE}/prizes`;
 export const URL_PRIZE_BULK = `${URL_BASE}/prizes/bulk`;
 export const URL_WINNER = `${URL_BASE}/winners`;

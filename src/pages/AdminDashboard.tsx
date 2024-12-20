@@ -19,7 +19,7 @@ import { ResetWarningModal } from '@/components/ResetWarningModal'
 import CustomLoader from '@/components/CustomLoader'
 
 import { request } from '@/services/index'
-import { URL_PARTICIPANT, URL_PRIZE, URL_WINNER, URL_PRIZE_BULK, URL_WINNER_FULL, URL_WINNER_FILTER } from '@/constants/index'
+import { URL_PARTICIPANT, URL_PRIZE, URL_WINNER, URL_PRIZE_BULK, URL_WINNER_FULL, URL_WINNER_FILTER, URL_PARTICIPANTS_BULK } from '@/constants/index'
 
 const AdminDashboard = () => {
     const [prizes, setPrizes] = useState<Prize[]>([])
@@ -154,12 +154,12 @@ const AdminDashboard = () => {
                     name,
                     cedula,
                     ticket_number,
-                    active: true,
+                    active: false,
                     asistencia: false
                 }
             })
 
-            const result = await request(URL_PARTICIPANT, "POST", { "participants": newParticipants })
+            const result = await request(URL_PARTICIPANTS_BULK, "POST", { "participants": newParticipants })
 
             if (result.status_code === 200) {
                 const updatedParticipants = [...participants, ...result.data]
