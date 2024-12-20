@@ -144,22 +144,31 @@ const AdminDashboard = () => {
     }
 
     const handleUploadParticipantsCSV = async (file: File) => {
-        const reader = new FileReader()
-        reader.onload = async (e) => {
-            const text = e.target?.result as string
-            const rows = text.split('\n').filter(row => row.trim() !== '')
-            const newParticipants: Omit<Participant, 'id_participant'>[] = rows.map((row) => {
-                const [name, cedula, ticket_number] = row.split(';').map(field => field.trim())
-                return {
-                    name,
-                    cedula,
-                    ticket_number,
-                    active: false,
-                    asistencia: false
-                }
-            })
+        const reader = new FileReader();
 
-            const result = await request(URL_PARTICIPANTS_BULK, "POST", { "participants": newParticipants })
+        reader.onload = async (e) => {
+            const text = e.target?.result as string;
+            const rows = text.split('\n').filter(row => row.trim() !== '');
+        
+            // Filtrar participantes con campos vacíos (name, cedula o ticket_number)
+            const newParticipants: Omit<Participant, 'id_participant'>[] = rows.map((row) => {
+                const [name, cedula, ticket_number] = row.split(';').map(field => field.trim());
+        
+                // Validar si alguno de los campos está vacío
+                if (name && cedula && ticket_number) {
+                    return {
+                        name,
+                        cedula,
+                        ticket_number,
+                        active: false,
+                        asistencia: false
+                    };
+                }
+                return null; 
+            }).filter(participant => participant !== null);
+        
+            const result = await request(URL_PARTICIPANTS_BULK, "POST", { "participants": newParticipants });
+        
 
             if (result.status_code === 200) {
                 const updatedParticipants = [...participants, ...result.data]

@@ -1,4 +1,6 @@
-const URL_BASE = 'https://hundred.com.co';
+// 'https://hundred.com.co'
+
+const URL_BASE = 'http://localhost:8000';
 
 export const URL_LOGIN = `${URL_BASE}/login`;
 export const URL_PROFILE = `${URL_BASE}/users/profile`;
