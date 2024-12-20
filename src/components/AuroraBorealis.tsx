@@ -18,24 +18,21 @@ export const AuroraBorealis = () => {
             <motion.div
                 className="absolute inset-0 opacity-50"
                 style={{
-                    backgroundImage: 'url("/aurora1.png")',
-                    backgroundSize: 'cover',
+                    background: 'linear-gradient(45deg, #00ff00, #0000ff, #ff00ff)',
                     y: y1
                 }}
             />
             <motion.div
                 className="absolute inset-0 opacity-40"
                 style={{
-                    backgroundImage: 'url("/aurora2.png")',
-                    backgroundSize: 'cover',
+                    background: 'linear-gradient(135deg, #ff00ff, #00ffff, #ffff00)',
                     y: y2
                 }}
             />
             <motion.div
                 className="absolute inset-0 opacity-30"
                 style={{
-                    backgroundImage: 'url("/aurora3.png")',
-                    backgroundSize: 'cover',
+                    background: 'linear-gradient(225deg, #ff0000, #00ff00, #0000ff)',
                     y: y3
                 }}
             />

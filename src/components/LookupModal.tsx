@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Ticket, User, CreditCard } from 'lucide-react'
+import { Search, Ticket, User, CreditCard, CheckCircle } from 'lucide-react'
 import { Participant } from '../types'
 import { request } from '@/services/index'
 import { URL_PARTICIPANT } from '@/constants/index'
+import { useToast } from '@/hooks/use-toast'
 
 interface LookupModalProps {
     isOpen: boolean
@@ -17,6 +19,7 @@ export function LookupModal({ isOpen, onOpenChange }: LookupModalProps) {
     const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null)
     const [participants, setParticipants] = useState<Participant[]>([])
     const [error, setError] = useState<string | null>(null)
+    const { toast } = useToast()
 
     useEffect(() => {
         const fetchParticipants = async () => {
@@ -54,6 +57,34 @@ export function LookupModal({ isOpen, onOpenChange }: LookupModalProps) {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.replace(/\D/g, '') // Solo permite números
         setSearchTerm(value)
+    }
+
+    const handleMarkAttendance = async () => {
+        if (selectedParticipant) {
+            try {
+                const response = await request(URL_PARTICIPANT, 'PUT', {
+                    id_participant: selectedParticipant.id_participant,
+                    asistencia: true
+                })
+                if (response.status_code === 200) {
+                    setSelectedParticipant({ ...selectedParticipant, asistencia: true })
+                    toast({
+                        title: "Asistencia marcada",
+                        description: "La asistencia del participante ha sido registrada exitosamente.",
+                        variant: "success",
+                    })
+                } else {
+                    throw new Error(response.data.detail || "Error al marcar la asistencia")
+                }
+            } catch (error) {
+                console.error('Error marking attendance:', error)
+                toast({
+                    title: "Error",
+                    description: "Hubo un problema al marcar la asistencia. Por favor, inténtelo de nuevo.",
+                    variant: "destructive",
+                })
+            }
+        }
     }
 
     return (
@@ -106,6 +137,14 @@ export function LookupModal({ isOpen, onOpenChange }: LookupModalProps) {
                                     </div>
                                     <p className="text-3xl font-bold">{selectedParticipant.ticket_number}</p>
                                 </div>
+                                <div className="flex items-center space-x-4">
+                                    <div className={`bg-white/30 p-3 rounded-full ${selectedParticipant.asistencia ? 'bg-green-500' : 'bg-red-500'}`}>
+                                        <CheckCircle className="h-6 w-6 text-white" />
+                                    </div>
+                                    <p className="text-xl">
+                                        <span className="font-semibold">Asistencia:</span> {selectedParticipant.asistencia ? 'Registrada' : 'No registrada'}
+                                    </p>
+                                </div>
                             </div>
                             <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-4 text-center">
                                 <p className="text-lg font-semibold">Número de Sorteo</p>
@@ -127,6 +166,22 @@ export function LookupModal({ isOpen, onOpenChange }: LookupModalProps) {
                     <p className="text-center text-white/70 mt-4">
                         Ingrese el número de cédula completo para buscar
                     </p>
+                )}
+                {selectedParticipant && !selectedParticipant.asistencia && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="mt-6"
+                    >
+                        <Button
+                            onClick={handleMarkAttendance}
+                            className="w-full bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white font-bold py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                        >
+                            <CheckCircle className="mr-2 h-5 w-5" />
+                            Marcar Asistencia
+                        </Button>
+                    </motion.div>
                 )}
             </DialogContent>
         </Dialog>

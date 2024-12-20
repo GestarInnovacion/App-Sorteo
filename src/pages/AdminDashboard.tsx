@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
@@ -13,7 +15,8 @@ import { WinnerModal } from '@/components/WinnerModal'
 import { DrawSection } from '@/components/DrawSection'
 import { Prize, Participant, Winner } from '../types'
 import { ResetWarningModal } from '@/components/ResetWarningModal'
-import CustomLoader from '@/components/CustomLoader';
+import CustomLoader from '@/components/CustomLoader'
+import { UploadParticipantsModal } from '@/components/UploadParticipantsModal'
 
 import { request } from '@/services/index'
 import { URL_PARTICIPANT, URL_PRIZE, URL_WINNER, URL_PRIZE_BULK, URL_WINNER_FULL, URL_WINNER_FILTER } from '@/constants/index'
@@ -26,77 +29,70 @@ const AdminDashboard = () => {
     const [showUploadCSVModal, setShowUploadCSVModal] = useState(false)
     const [showPrizeListModal, setShowPrizeListModal] = useState(false)
     const [showParticipantListModal, setShowParticipantListModal] = useState(false)
-    const [] = useState(false)
-    const [, setSelectedPrize] = useState<Prize | null>(null)
+    const [selectedPrize, setSelectedPrize] = useState<Prize | null>(null)
     const [showDrawingModal, setShowDrawingModal] = useState(false)
     const [showWinnerModal, setShowWinnerModal] = useState(false)
     const [currentWinner, setCurrentWinner] = useState<Winner | null>(null)
     const [isLeftPanelVisible, setIsLeftPanelVisible] = useState(true)
     const [showResetWarningModal, setShowResetWarningModal] = useState(false)
+    const [showUploadParticipantsModal, setShowUploadParticipantsModal] = useState(false)
     const navigate = useNavigate()
     const { toast } = useToast()
 
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(false);
-
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(false)
 
     useEffect(() => {
-        
         const loadData = async () => {
-          try {
+            try {
+                const responseParticipants = await request(URL_PARTICIPANT, 'GET')
+                if (responseParticipants.status_code === 200) {
+                    setParticipants(responseParticipants.data)
+                } else {
+                    navigate('/')
+                    return
+                }
 
-            const responseParticipants = await request(URL_PARTICIPANT, 'GET');
-            if (responseParticipants.status_code === 200) {
-              setParticipants(responseParticipants.data);
-            } else {
-              navigate('/'); 
-              return;
-            }
+                const responsePrize = await request(URL_PRIZE, 'GET')
+                if (responsePrize.status_code === 200) {
+                    setPrizes(responsePrize.data)
+                } else {
+                    navigate('/')
+                    return
+                }
 
-            const responsePrize = await request(URL_PRIZE, 'GET');
-            if (responsePrize.status_code === 200) {
-              setPrizes(responsePrize.data);
-            } else {
-              navigate('/');
-              return;
+                const responseWinners = await request(URL_WINNER, 'GET')
+                if (responseWinners.status_code === 200) {
+                    setWinners(responseWinners.data)
+                } else {
+                    navigate('/')
+                    return
+                }
+            } catch (err) {
+                console.error('Error al cargar los datos:', err)
+                setError(true)
+                navigate('/')
+            } finally {
+                setLoading(false)
             }
+        }
 
-            const responseWinners = await request(URL_WINNER, 'GET');
-            if (responseWinners.status_code === 200) {
-              setWinners(responseWinners.data);
-            } else {
-              navigate('/'); 
-              return;
-            }
-    
-          } catch (err) {
-            console.error('Error al cargar los datos:', err);
-            setError(true);
-            navigate('/'); 
-          } finally {
-            setLoading(false);
-          }
-        };
-    
-        loadData();
-      }, [navigate]);
-    
-      if (loading) {
+        loadData()
+    }, [navigate])
+
+    if (loading) {
         return (
-          <CustomLoader 
-            variant="settings"
-            size="large"
-            color="purple"
-          />
-        );
-      }
-    
-      if (error) {
-        return <div>Error al cargar los datos. Redirigiendo...</div>;
-      }
-    
+            <CustomLoader
+                variant="settings"
+                size="large"
+                color="purple"
+            />
+        )
+    }
 
-
+    if (error) {
+        return <div>Error al cargar los datos. Redirigiendo...</div>
+    }
 
     const handleAddPrize = async (newPrize: Omit<Prize, 'id_prize' | 'sorteado'>) => {
         const prize: Prize = {
@@ -104,7 +100,7 @@ const AdminDashboard = () => {
             sorteado: false
         }
 
-        const responsePrize = await request(URL_PRIZE, "POST", prize);
+        const responsePrize = await request(URL_PRIZE, "POST", prize)
 
         if (responsePrize.status_code === 200) {
             const updatedPrizes = [...prizes, responsePrize.data]
@@ -131,10 +127,10 @@ const AdminDashboard = () => {
                     sorteado: false
                 }
             })
-            
-            const result = await request(URL_PRIZE_BULK, "POST", {"prizes":newPrizes})
 
-            if(result.status_code === 200) {
+            const result = await request(URL_PRIZE_BULK, "POST", { "prizes": newPrizes })
+
+            if (result.status_code === 200) {
                 const updatedPrizes = [...prizes, ...result.data]
                 setPrizes(updatedPrizes)
 
@@ -149,71 +145,71 @@ const AdminDashboard = () => {
     }
 
     const handleDeletePrize = async (prizeId: number) => {
-        const response = await request(URL_PRIZE, "DELETE", { id_prize: prizeId });
+        const response = await request(URL_PRIZE, "DELETE", { id_prize: prizeId })
         if (response.status_code === 200) {
-            const updatedPrizes = prizes.filter(prize => prize.id_prize !== prizeId);
-            setPrizes(updatedPrizes);
+            const updatedPrizes = prizes.filter(prize => prize.id_prize !== prizeId)
+            setPrizes(updatedPrizes)
             toast({
                 variant: "success",
                 title: "Premio eliminado",
                 description: "El premio ha sido eliminado exitosamente.",
-            });
+            })
         } else {
             toast({
                 variant: "destructive",
                 title: "Error",
                 description: "No se pudo eliminar el premio. Por favor, inténtelo de nuevo.",
-            });
+            })
         }
-    };
+    }
 
     const handleDeleteParticipant = async (participantId: number) => {
-        const response = await request(URL_PARTICIPANT, "DELETE", { id_participant: participantId });
+        const response = await request(URL_PARTICIPANT, "DELETE", { id_participant: participantId })
         if (response.status_code === 200) {
-            const updatedParticipants = participants.filter(participant => participant.id_participant !== participantId);
-            setParticipants(updatedParticipants);
+            const updatedParticipants = participants.filter(participant => participant.id_participant !== participantId)
+            setParticipants(updatedParticipants)
             toast({
                 variant: "success",
                 title: "Participante eliminado",
                 description: "El participante ha sido eliminado exitosamente.",
-            });
+            })
         } else {
             toast({
                 variant: "destructive",
                 title: "Error",
                 description: "No se pudo eliminar el participante. Por favor, inténtelo de nuevo.",
-            });
+            })
         }
-    };
+    }
 
     const handleSelectPrize = async (prize: Prize) => {
         const availableParticipants = participants.filter(p =>
             p.active && parseInt(p.ticket_number) >= prize.range_start && parseInt(p.ticket_number) <= prize.range_end
-        );
+        )
 
         if (availableParticipants.length === 0) {
             toast({
                 title: "No se puede realizar el sorteo",
                 description: `No hay participantes disponibles en el rango ${prize.range_start} - ${prize.range_end} para el premio "${prize.name}".`,
                 variant: "destructive",
-            });
-            return;
+            })
+            return
         }
 
-        setSelectedPrize(prize);
-        setShowDrawingModal(true);
+        setSelectedPrize(prize)
+        setShowDrawingModal(true)
 
         setTimeout(async () => {
-            setShowDrawingModal(false);
+            setShowDrawingModal(false)
 
-            const randomParticipantIndex = Math.floor(Math.random() * availableParticipants.length);
-            const selectedParticipant = availableParticipants[randomParticipantIndex];
+            const randomParticipantIndex = Math.floor(Math.random() * availableParticipants.length)
+            const selectedParticipant = availableParticipants[randomParticipantIndex]
 
             const responseWinner = await request(URL_WINNER, 'POST', {
                 'id_prize': prize.id_prize,
                 'id_participant': selectedParticipant.id_participant,
                 'drawdate': new Date().toISOString(),
-            });
+            })
 
             if (responseWinner.status_code === 200) {
                 const newWinner: Winner = {
@@ -221,164 +217,217 @@ const AdminDashboard = () => {
                     participant_name: selectedParticipant.name,
                     ticket_number: selectedParticipant.ticket_number,
                     prize_name: prize.name
-                };
-                setCurrentWinner(newWinner);
-                setShowWinnerModal(true);
+                }
+                setCurrentWinner(newWinner)
+                setShowWinnerModal(true)
 
-                const updatedWinners = [...winners, newWinner];
-                setWinners(updatedWinners);
+                const updatedWinners = [...winners, newWinner]
+                setWinners(updatedWinners)
 
-                const requestUpdatePrizes = await request(URL_PRIZE, "PUT", { 'id_prize': prize.id_prize, 'sorteado': true });
-                const requestUpdateParticipants = await request(URL_PARTICIPANT, "PUT", { 'id_participant': selectedParticipant.id_participant, 'active': false });
+                const requestUpdatePrizes = await request(URL_PRIZE, "PUT", { 'id_prize': prize.id_prize, 'sorteado': true })
+                const requestUpdateParticipants = await request(URL_PARTICIPANT, "PUT", { 'id_participant': selectedParticipant.id_participant, 'active': false })
 
                 if (requestUpdatePrizes.status_code === 200 && requestUpdateParticipants.status_code === 200) {
                     const updatedPrizes = prizes.map(p =>
                         p.id_prize === prize.id_prize ? { ...p, sorteado: true } : p
-                    );
-                    setPrizes(updatedPrizes);
+                    )
+                    setPrizes(updatedPrizes)
 
                     const updatedParticipants = participants.map(p =>
                         p.id_participant === selectedParticipant.id_participant ? { ...p, active: false } : p
-                    );
-                    setParticipants(updatedParticipants);
+                    )
+                    setParticipants(updatedParticipants)
 
                     toast({
                         title: "¡Sorteo realizado!",
                         description: `${selectedParticipant.name} ha ganado ${prize.name}`,
                         variant: "success",
-                    });
+                    })
                 } else {
                     toast({
                         title: "Error",
                         description: "Hubo un problema al actualizar el premio o el participante.",
                         variant: "destructive",
-                    });
+                    })
                 }
             } else {
                 toast({
                     title: "Error",
                     description: "Hubo un problema al registrar el ganador.",
                     variant: "destructive",
-                });
+                })
             }
-        }, 5000);
-    };
-
+        }, 5000)
+    }
 
     const handleNextPrize = () => {
-        setShowWinnerModal(false);
-        const nextPrize = prizes.find(p => !p.sorteado);
+        setShowWinnerModal(false)
+        const nextPrize = prizes.find(p => !p.sorteado)
         if (nextPrize) {
-            handleSelectPrize(nextPrize);
+            handleSelectPrize(nextPrize)
         } else {
             toast({
                 variant: "default",
                 title: "Sorteo finalizado",
                 description: "Todos los premios han sido sorteados.",
-            });
+            })
         }
-    };
+    }
 
     const handleClearWinners = async () => {
-        const responseResetWinners = await request(URL_WINNER_FULL, "DELETE");
+        const responseResetWinners = await request(URL_WINNER_FULL, "DELETE")
 
         if (responseResetWinners.status_code === 200) {
-            const restoredPrizes = prizes.map(prize => ({ ...prize, sorteado: false }));
-            setPrizes(restoredPrizes);
+            const restoredPrizes = prizes.map(prize => ({ ...prize, sorteado: false }))
+            setPrizes(restoredPrizes)
 
-            const restoredParticipants = participants.map(participant => ({ ...participant, active: true }));
-            setParticipants(restoredParticipants);
+            const restoredParticipants = participants.map(participant => ({ ...participant, active: true }))
+            setParticipants(restoredParticipants)
 
-            setWinners([]);
+            setWinners([])
 
             toast({
                 variant: "success",
                 title: "Historial de ganadores vaciado",
                 description: "Se han restaurado los premios y participantes a su estado original.",
-            });
+            })
         } else {
             toast({
                 variant: "destructive",
                 title: "Error",
                 description: "No se pudo vaciar el historial de ganadores. Por favor, inténtelo de nuevo.",
-            });
+            })
         }
-    };
+    }
 
     const handleDeleteWinner = async (winnerId: number) => {
-        const winnerToDelete = winners.find(w => w.id_winner === winnerId);
-        if (!winnerToDelete) return;
+        const winnerToDelete = winners.find(w => w.id_winner === winnerId)
+        if (!winnerToDelete) return
 
-
-        const responseDeleteWinner = await request(URL_WINNER_FILTER, "DELETE", { "id_winner": winnerId,
-                                                                            "id_participant": winnerToDelete.id_participant,
-                                                                            "id_prize": winnerToDelete.id_prize});
+        const responseDeleteWinner = await request(URL_WINNER_FILTER, "DELETE", {
+            "id_winner": winnerId,
+            "id_participant": winnerToDelete.id_participant,
+            "id_prize": winnerToDelete.id_prize
+        })
 
         if (responseDeleteWinner.status_code === 200) {
-            const updatedWinners = winners.filter(w => w.id_winner !== winnerId);
-            setWinners(updatedWinners);
+            const updatedWinners = winners.filter(w => w.id_winner !== winnerId)
+            setWinners(updatedWinners)
 
             const updatedPrizes = prizes.map(prize =>
                 prize.id_prize === winnerToDelete.id_prize ? { ...prize, sorteado: false } : prize
-            );
-            setPrizes(updatedPrizes);
+            )
+            setPrizes(updatedPrizes)
 
             const updatedParticipants = participants.map(participant =>
                 participant.id_participant === winnerToDelete.id_participant ? { ...participant, active: true } : participant
-            );
-            setParticipants(updatedParticipants);
+            )
+            setParticipants(updatedParticipants)
 
             toast({
                 variant: "success",
                 title: "Ganador eliminado",
                 description: "Se ha eliminado el ganador y restaurado el premio y participante asociados.",
-            });
+            })
         } else {
             toast({
                 variant: "destructive",
                 title: "Error",
                 description: "No se pudo eliminar el ganador. Por favor, inténtelo de nuevo.",
-            });
+            })
         }
-    };
+    }
 
     const toggleLeftPanel = () => {
-        setIsLeftPanelVisible(!isLeftPanelVisible);
-    };
+        setIsLeftPanelVisible(!isLeftPanelVisible)
+    }
 
     const handleTotalReset = async (keyword: string) => {
         if (keyword === 'REINICIAR_TODO') {
-            const responseDeleteWinners = await request(URL_WINNER, "DELETE", { all: true });
-            const responseDeletePrizes = await request(URL_PRIZE, "DELETE", { all: true });
-            const responseDeleteParticipants = await request(URL_PARTICIPANT, "DELETE", { all: true });
+            const responseDeleteWinners = await request(URL_WINNER, "DELETE", { all: true })
+            const responseDeletePrizes = await request(URL_PRIZE, "DELETE", { all: true })
+            const responseDeleteParticipants = await request(URL_PARTICIPANT, "DELETE", { all: true })
 
             if (responseDeleteWinners.status_code === 200 && responseDeletePrizes.status_code === 200 && responseDeleteParticipants.status_code === 200) {
-                setWinners([]);
-                setPrizes([]);
-                setParticipants([]);
+                setWinners([])
+                setPrizes([])
+                setParticipants([])
 
-                setShowResetWarningModal(false);
+                setShowResetWarningModal(false)
 
                 toast({
                     variant: "success",
                     title: "Reinicio completo",
                     description: "Todos los datos han sido eliminados exitosamente.",
-                });
+                })
             } else {
                 toast({
                     variant: "destructive",
                     title: "Error",
                     description: "No se pudo realizar el reinicio completo. Por favor, inténtelo de nuevo.",
-                });
+                })
             }
         } else {
             toast({
                 variant: "destructive",
                 title: "Palabra clave incorrecta",
                 description: 'La palabra clave correcta es "REINICIAR_TODO".',
-            });
+            })
         }
-    };
+    }
+
+    const handleUploadParticipantsSuccess = () => {
+        //fetchParticipants()  //This function is not defined.  Assuming it fetches participant data and updates state.
+        const fetchParticipants = async () => {
+            try {
+                const responseParticipants = await request(URL_PARTICIPANT, 'GET')
+                if (responseParticipants.status_code === 200) {
+                    setParticipants(responseParticipants.data)
+                } else {
+                    toast({
+                        variant: "destructive",
+                        title: "Error",
+                        description: "No se pudieron cargar los participantes.",
+                    })
+                }
+            } catch (error) {
+                console.error("Error fetching participants:", error);
+                toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: "No se pudieron cargar los participantes.",
+                })
+            }
+        }
+        fetchParticipants();
+    }
+
+    const handleAddPrizeSuccess = () => {
+        //fetchPrizes() //This function is not defined. Assuming it fetches prize data and updates state.
+        const fetchPrizes = async () => {
+            try {
+                const responsePrize = await request(URL_PRIZE, 'GET')
+                if (responsePrize.status_code === 200) {
+                    setPrizes(responsePrize.data)
+                } else {
+                    toast({
+                        variant: "destructive",
+                        title: "Error",
+                        description: "No se pudieron cargar los premios.",
+                    })
+                }
+            } catch (error) {
+                console.error("Error fetching prizes:", error);
+                toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: "No se pudieron cargar los premios.",
+                })
+            }
+        }
+        fetchPrizes();
+    }
+
 
     return (
         <div className="min-h-screen relative overflow-hidden">
@@ -520,6 +569,10 @@ const AdminDashboard = () => {
                                         </h2>
                                         <div className="space-y-4">
                                             <div className="grid grid-cols-2 gap-4">
+                                                <Button onClick={() => setShowUploadParticipantsModal(true)} className="w-full bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-300 hover:scale-105">
+                                                    <Upload className="mr-2 h-5 w-5" />
+                                                    Cargar CSV
+                                                </Button>
                                                 <Button onClick={() => {
                                                     setShowParticipantListModal(true)
                                                     toast({
@@ -547,12 +600,18 @@ const AdminDashboard = () => {
                                                         </div>
                                                         <p className="text-xs text-white/80">Activos</p>
                                                     </div>
-                                                </div>
-                                                <div className="text-center mt-4">
-                                                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm mb-2">
-                                                        <p className="text-xl font-bold text-white">{participants.filter(p => !p.active).length}</p>
+                                                    <div className="text-center">
+                                                        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm mb-2">
+                                                            <p className="text-xl font-bold text-white">{participants.filter(p => p.asistencia).length}</p>
+                                                        </div>
+                                                        <p className="text-xs text-white/80">Presentes</p>
                                                     </div>
-                                                    <p className="text-xs text-white/80">Inactivos</p>
+                                                    <div className="text-center">
+                                                        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm mb-2">
+                                                            <p className="text-xl font-bold text-white">{participants.filter(p => p.active && p.asistencia).length}</p>
+                                                        </div>
+                                                        <p className="text-xs text-white/80">Elegibles</p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -570,8 +629,7 @@ const AdminDashboard = () => {
                         >
                             <DrawSection
                                 prizes={prizes.filter(p => !p.sorteado)}
-                                onSelectPrize={handleSelectPrize}
-                            />
+                                onSelectPrize={handleSelectPrize} participants={[]} />
                         </motion.div>
 
                         {/* Right Sidebar */}
@@ -671,6 +729,11 @@ const AdminDashboard = () => {
                 isOpen={showResetWarningModal}
                 onOpenChange={setShowResetWarningModal}
                 onConfirmReset={handleTotalReset}
+            />
+            <UploadParticipantsModal
+                isOpen={showUploadParticipantsModal}
+                onOpenChange={setShowUploadParticipantsModal}
+                onUploadSuccess={handleUploadParticipantsSuccess}
             />
         </div>
     )

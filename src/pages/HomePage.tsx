@@ -68,6 +68,11 @@ const HomePage = () => {
         )
 
         if (response.status_code === 200) {
+            if (rememberMe) {
+                localStorage.setItem('loginCredentials', JSON.stringify({ username, password }))
+            } else {
+                localStorage.removeItem('loginCredentials')
+            }
             toast({
                 title: "¡Bienvenido!",
                 description: "Has iniciado sesión exitosamente.",
@@ -168,6 +173,7 @@ const HomePage = () => {
                                             exit={{ opacity: 0, y: -20 }}
                                             className="space-y-4"
                                         >
+                                            {/* Commented out Registrar Participante button
                                             <motion.div
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
@@ -180,6 +186,7 @@ const HomePage = () => {
                                                     Registrar Participante
                                                 </Button>
                                             </motion.div>
+                                            */}
                                             <motion.div
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
@@ -199,8 +206,7 @@ const HomePage = () => {
                                             >
                                                 <Button
                                                     onClick={() => setShowLookupModal(true)}
-                                                    variant="outline"
-                                                    className="w-full border-white/10 text-white hover:bg-white/10 py-4 md:py-5 text-sm md:text-base rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                                                    className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white py-4 md:py-5 text-sm md:text-base rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
                                                 >
                                                     <Search className="mr-2 h-4 w-4" />
                                                     Buscar Número de Sorteo
