@@ -68,11 +68,6 @@ const HomePage = () => {
         )
 
         if (response.status_code === 200) {
-            if (rememberMe) {
-                localStorage.setItem('loginCredentials', JSON.stringify({ username, password }))
-            } else {
-                localStorage.removeItem('loginCredentials')
-            }
             toast({
                 title: "¡Bienvenido!",
                 description: "Has iniciado sesión exitosamente.",

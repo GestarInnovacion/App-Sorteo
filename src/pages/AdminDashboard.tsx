@@ -13,6 +13,7 @@ import { WinnerModal } from '@/components/WinnerModal'
 import { DrawSection } from '@/components/DrawSection'
 import { Prize, Participant, Winner } from '../types'
 import { ResetWarningModal } from '@/components/ResetWarningModal'
+import CustomLoader from '@/components/CustomLoader';
 
 import { request } from '@/services/index'
 import { URL_PARTICIPANT, URL_PRIZE, URL_WINNER, URL_PRIZE_BULK, URL_WINNER_FULL, URL_WINNER_FILTER } from '@/constants/index'
@@ -35,26 +36,67 @@ const AdminDashboard = () => {
     const navigate = useNavigate()
     const { toast } = useToast()
 
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+
+
     useEffect(() => {
+        
         const loadData = async () => {
-            const responseParticipants = await request(URL_PARTICIPANT, "GET");
+          try {
+
+            const responseParticipants = await request(URL_PARTICIPANT, 'GET');
             if (responseParticipants.status_code === 200) {
-                setParticipants(responseParticipants.data);
+              setParticipants(responseParticipants.data);
+            } else {
+              navigate('/'); 
+              return;
             }
 
-            const responsePrize = await request(URL_PRIZE, "GET");
+            const responsePrize = await request(URL_PRIZE, 'GET');
             if (responsePrize.status_code === 200) {
-                setPrizes(responsePrize.data);
+              setPrizes(responsePrize.data);
+            } else {
+              navigate('/');
+              return;
             }
 
-            const responseWinners = await request(URL_WINNER, "GET");
+            const responseWinners = await request(URL_WINNER, 'GET');
             if (responseWinners.status_code === 200) {
-                setWinners(responseWinners.data);
+              setWinners(responseWinners.data);
+            } else {
+              navigate('/'); 
+              return;
             }
+    
+          } catch (err) {
+            console.error('Error al cargar los datos:', err);
+            setError(true);
+            navigate('/'); 
+          } finally {
+            setLoading(false);
+          }
         };
-
+    
         loadData();
-    }, []);
+      }, [navigate]);
+    
+      if (loading) {
+        return (
+          <CustomLoader 
+            variant="settings"
+            size="large"
+            color="purple"
+          />
+        );
+      }
+    
+      if (error) {
+        return <div>Error al cargar los datos. Redirigiendo...</div>;
+      }
+    
+
+
 
     const handleAddPrize = async (newPrize: Omit<Prize, 'id_prize' | 'sorteado'>) => {
         const prize: Prize = {
