@@ -388,7 +388,7 @@ const AdminDashboard = () => {
     }
 
     const handleTotalReset = async (keyword: string) => {
-        if (keyword === 'REINICIAR_TODO') {
+        if (keyword === 'Reiniciar') {
             const responseDeleteAll = await request(URL_CLEAN, "DELETE")
 
             if (responseDeleteAll.status_code === 200) {
@@ -414,7 +414,7 @@ const AdminDashboard = () => {
             toast({
                 variant: "destructive",
                 title: "Palabra clave incorrecta",
-                description: 'La palabra clave correcta es "REINICIAR_TODO".',
+                description: 'La palabra clave correcta es "Reiniciar".',
             })
         }
     }
@@ -795,6 +795,3 @@ const AdminDashboard = () => {
         </div>
     )
 }
-
-export default AdminDashboard
-
