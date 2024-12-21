@@ -12,7 +12,7 @@ interface DrawSectionProps {
 }
 
 export function DrawSection({ prizes, participants, onSelectPrize }: DrawSectionProps) {
-    const [selectedPrize, setSelectedPrize] = useState<Prize | null>(null)
+    const [, setSelectedPrize] = useState<Prize | null>(null)
     const { toast } = useToast()
 
     const handleSelectPrize = (prize: Prize) => {
@@ -33,10 +33,6 @@ export function DrawSection({ prizes, participants, onSelectPrize }: DrawSection
         onSelectPrize(prize)
     }
 
-    const playSound = (type: 'start' | 'win') => {
-        const audio = new Audio(type === 'start' ? '/sounds/countdown.mp3' : '/sounds/winner.mp3')
-        audio.play()
-    }
 
     return (
         <div className="space-y-12">
@@ -83,8 +79,8 @@ export function DrawSection({ prizes, participants, onSelectPrize }: DrawSection
                             >
                                 <Card
                                     className={`relative overflow-hidden bg-white/10 backdrop-blur-md border-white/20 cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20 ${participants.filter(p => p.active && p.ticket_number && parseInt(p.ticket_number) >= prize.range_start && parseInt(p.ticket_number) <= prize.range_end).length === 0
-                                            ? 'opacity-50'
-                                            : ''
+                                        ? 'opacity-50'
+                                        : ''
                                         }`}
                                     onClick={() => handleSelectPrize(prize)}
                                 >

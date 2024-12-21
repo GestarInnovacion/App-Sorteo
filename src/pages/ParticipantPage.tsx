@@ -14,10 +14,10 @@ import { request } from '@/services/index'
 import { URL_PARTICIPANT } from '@/constants/index'
 
 interface FormData {
-    cedula: string
-    name: string
-    ticket_number: string
-    active: boolean
+    cedula: string;
+    name: string;
+    ticket_number: string;
+    active: boolean;
 }
 
 const ParticipantPage = () => {
@@ -30,7 +30,6 @@ const ParticipantPage = () => {
     })
     const [showSuccessModal, setShowSuccessModal] = useState(false)
     const [showErrorModal, setShowErrorModal] = useState(false)
-    const [] = useState(false)
     const [existingParticipant, setExistingParticipant] = useState<FormData | null>(null)
     const [errorField, setErrorField] = useState<'cedula' | 'name' | 'ticket_number'>('cedula')
     const { toast } = useToast()
@@ -50,10 +49,16 @@ const ParticipantPage = () => {
         }
     }
 
-    const checkExistingParticipant = async (field: keyof FormData, value: string) => {
+    const checkExistingParticipant = async (field: keyof FormData, value: string): Promise<FormData | undefined> => {
         const response = await request(URL_PARTICIPANT, "GET")
         const participants: Participant[] = response.data
-        return participants.find((p) => p[field] === value)
+        const participant = participants.find((p) => p[field] === value)
+        return participant ? {
+            cedula: participant.cedula,
+            name: participant.name,
+            ticket_number: participant.ticket_number || '',
+            active: participant.active
+        } : undefined
     }
 
     const handleNext = async () => {
@@ -286,7 +291,11 @@ const ParticipantPage = () => {
                     <DialogTitle>Error de Registro</DialogTitle>
                     <ErrorModal
                         open={showErrorModal}
-                        existingParticipant={existingParticipant}
+                        existingParticipant={existingParticipant ? {
+                            cedula: existingParticipant.cedula,
+                            name: existingParticipant.name,
+                            ticket_number: existingParticipant.ticket_number
+                        } : null}
                         field={errorField}
                         onOpenChange={setShowErrorModal}
                     />
