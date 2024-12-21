@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -22,6 +22,13 @@ export function LookupModal({ isOpen, onOpenChange }: LookupModalProps) {
     const [error, setError] = useState<string | null>(null)
     const [isTicketNumberSubmitted, setIsTicketNumberSubmitted] = useState(false)
     const { toast } = useToast()
+
+    useEffect(() => {
+        if (!isOpen) {
+            setSearchTerm('')
+            setSelectedParticipant(null)
+        }
+    }, [isOpen])
 
     useEffect(() => {
         const fetchParticipants = async () => {

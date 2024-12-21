@@ -18,6 +18,7 @@ import { Prize, Participant, Winner } from '../types'
 import { ResetWarningModal } from '@/components/ResetWarningModal'
 import MinimalistLoader from '@/components/MinimalistLoader'
 import { AddParticipantModal } from '@/components/AddParticipantModal'
+import { StatisticsDetailModal } from '@/components/StatisticsDetailModal'
 
 import { request } from '@/services/index'
 import { URL_PARTICIPANT, URL_PRIZE, URL_WINNER, URL_PRIZE_BULK, URL_WINNER_FULL, URL_WINNER_FILTER, URL_PARTICIPANTS_BULK, URL_CLEAN } from '@/constants/index'
@@ -43,6 +44,10 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(false)
     const [isMobile, setIsMobile] = useState(false);
+    const [showStatisticsModal, setShowStatisticsModal] = useState(false)
+    const [statisticsModalTitle, setStatisticsModalTitle] = useState('')
+    const [statisticsModalItems, setStatisticsModalItems] = useState<(Prize | Participant)[]>([])
+    const [statisticsModalType, setStatisticsModalType] = useState<'prizes' | 'participants'>('prizes')
 
     useEffect(() => {
         const loadData = async () => {
@@ -452,6 +457,13 @@ const AdminDashboard = () => {
         }
     }
 
+    const openStatisticsModal = (title: string, items: (Prize | Participant)[], type: 'prizes' | 'participants') => {
+        setStatisticsModalTitle(title)
+        setStatisticsModalItems(items)
+        setStatisticsModalType(type)
+        setShowStatisticsModal(true)
+    }
+
     return (
         <div className="min-h-screen relative overflow-hidden">
             {/* Fondo dinámico */}
@@ -547,7 +559,7 @@ const AdminDashboard = () => {
                                                 </Button>
                                                 <Button onClick={() => setShowUploadCSVModal(true)} className="w-full bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-300 hover:scale-105 flex items-center justify-center h-10">
                                                     <Upload className="h-4 w-4 mr-1.5 shrink-0" />
-                                                    Cargar CSV
+                                                    Cg CSV
                                                 </Button>
                                                 <Button onClick={() => {
                                                     setShowPrizeListModal(true)
@@ -564,13 +576,13 @@ const AdminDashboard = () => {
                                             <div className="border border-white/20 rounded-2xl p-4 mt-4">
                                                 <h3 className="text-lg font-semibold text-white mb-2">Estadísticas de Premios</h3>
                                                 <div className="grid grid-cols-2 gap-4">
-                                                    <div className="text-center">
+                                                    <div className="text-center cursor-pointer" onClick={() => openStatisticsModal('Premios Disponibles', prizes.filter(p => !p.sorteado), 'prizes')}>
                                                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/10 backdrop-blur-sm mb-2">
                                                             <p className="text-2xl font-bold text-white">{prizes.filter(p => !p.sorteado).length}</p>
                                                         </div>
                                                         <p className="text-xs text-white/80">Premios disponibles</p>
                                                     </div>
-                                                    <div className="text-center">
+                                                    <div className="text-center cursor-pointer" onClick={() => openStatisticsModal('Total de Premios', prizes, 'prizes')}>
                                                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/10 backdrop-blur-sm mb-2">
                                                             <p className="text-2xl font-bold text-white">{prizes.length}</p>
                                                         </div>
@@ -617,25 +629,25 @@ const AdminDashboard = () => {
                                             <div className="border border-white/20 rounded-2xl p-4 mt-4">
                                                 <h3 className="text-lg font-semibold text-white mb-2">Estadísticas de Participantes</h3>
                                                 <div className="grid grid-cols-2 gap-4">
-                                                    <div className="text-center">
+                                                    <div className="text-center cursor-pointer" onClick={() => openStatisticsModal('Total de Participantes', participants, 'participants')}>
                                                         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm mb-2">
                                                             <p className="text-xl font-bold text-white">{participants.length}</p>
                                                         </div>
                                                         <p className="text-xs text-white/80">Total</p>
                                                     </div>
-                                                    <div className="text-center">
+                                                    <div className="text-center cursor-pointer" onClick={() => openStatisticsModal('Participantes Asistentes', participants.filter(p => p.ticket_number && p.active), 'participants')}>
                                                         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm mb-2">
                                                             <p className="text-xl font-bold text-white">{participants.filter(p => p.ticket_number && p.active).length}</p>
                                                         </div>
                                                         <p className="text-xs text-white/80">Asistentes</p>
                                                     </div>
-                                                    <div className="text-center">
+                                                    <div className="text-center cursor-pointer" onClick={() => openStatisticsModal('Participantes Ganadores', participants.filter(p => p.ticket_number && !p.active), 'participants')}>
                                                         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm mb-2">
                                                             <p className="text-xl font-bold text-white">{participants.filter(p => p.ticket_number && !p.active).length}</p>
                                                         </div>
                                                         <p className="text-xs text-white/80">Ganadores</p>
                                                     </div>
-                                                    <div className="text-center">
+                                                    <div className="text-center cursor-pointer" onClick={() => openStatisticsModal('Participantes No Asistentes', participants.filter(p => !p.ticket_number && !p.active), 'participants')}>
                                                         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm mb-2">
                                                             <p className="text-xl font-bold text-white">{participants.filter(p => !p.ticket_number && !p.active).length}</p>
                                                         </div>
@@ -772,6 +784,13 @@ const AdminDashboard = () => {
                 onOpenChange={setShowAddParticipantModal}
                 onAddParticipant={handleAddParticipant}
                 existingParticipants={participants}
+            />
+            <StatisticsDetailModal
+                isOpen={showStatisticsModal}
+                onOpenChange={setShowStatisticsModal}
+                title={statisticsModalTitle}
+                items={statisticsModalItems}
+                type={statisticsModalType}
             />
         </div>
     )
