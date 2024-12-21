@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '@/hooks/use-toast'
-import { User2, Lock, ChevronDown, Eye, EyeOff, Search } from 'lucide-react'
+import { Lock, ChevronDown, Eye, EyeOff, Search } from 'lucide-react'
 import { Checkbox } from "@/components/ui/checkbox"
 
 import { request } from '@/services/index'
