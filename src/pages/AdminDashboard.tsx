@@ -1,10 +1,8 @@
-'use client'
-
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom'
-import { Home, LogOut, Gift, Users, Trophy, Plus, Upload, List, Trash2, RefreshCw, X, Menu } from 'lucide-react'
+import { Home, LogOut, Gift, Users, Trophy, Plus, Upload, List, Trash2, ChevronLeft, ChevronRight, RefreshCw, X, Menu } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { AddPrizeModal } from '@/components/AddPrizeModal'
 import UploadCSVModal from '@/components/UploadCSVModal'
@@ -639,7 +637,8 @@ const AdminDashboard = () => {
                                                         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm mb-2">
                                                             <p className="text-xl font-bold text-white">{participants.filter(p => p.ticket_number && p.active).length}</p>
                                                         </div>
-                                                        <p className="text-xs text-white/80">Asistentes</p>
+                                                        <p className="text-xs text-white/80">
+                                                            Asistentes</p>
                                                     </div>
                                                     <div className="text-center cursor-pointer" onClick={() => openStatisticsModal('Participantes Ganadores', participants.filter(p => p.ticket_number && !p.active), 'participants')}>
                                                         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm mb-2">
@@ -795,3 +794,6 @@ const AdminDashboard = () => {
         </div>
     )
 }
+
+export default AdminDashboard
+
