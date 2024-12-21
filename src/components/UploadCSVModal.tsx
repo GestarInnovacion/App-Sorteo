@@ -3,6 +3,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Prize } from "@/types/index";
 import { useCallback, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { motion } from 'framer-motion';
+import { Upload } from 'lucide-react';
 
 interface Props {
     isOpen: boolean;
@@ -117,49 +119,80 @@ const UploadCSVModal = ({ isOpen, onOpenChange, onUploadCSV }: Props) => {
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[425px] bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-3xl border-2 border-white/20 shadow-xl">
+            <DialogContent className="sm:max-w-[425px] w-[95vw] max-w-[95vw] sm:w-full bg-gradient-to-br from-sky-700 to-indigo-900 text-white rounded-3xl border-2 border-white/20 shadow-xl">
                 <DialogHeader>
-                    <DialogTitle className="text-3xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-yellow-500">
+                    <DialogTitle className="text-3xl font-bold text-center text-white">
                         Cargar Premios CSV
                     </DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4">
-                    <div className="bg-white/10 p-4 rounded-lg space-y-2">
-                        <h3 className="font-semibold flex items-center gap-2">
-                            <AlertCircle className="h-5 w-5 text-yellow-400" />
+                <div className="space-y-6">
+                    <div className="bg-white/10 p-6 rounded-2xl space-y-4">
+                        <h3 className="font-semibold text-xl flex items-center gap-2">
+                            <AlertCircle className="h-7 w-7 text-yellow-300" />
                             Formato Requerido
                         </h3>
                         <p className="text-sm text-white/80">
                             El archivo CSV debe contener los campos separados por punto y coma (;):
                         </p>
-                        <code className="block bg-black/20 p-2 rounded text-xs text-white/90">
-                            PREMIO 1;001;050
-                            PREMIO 2;030;100
-                        </code>
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                        >
+                            <code className="block bg-black/30 p-4 rounded-xl text-sm text-white/90 font-mono">
+                                PREMIO 1;001;050
+                                PREMIO 2;030;100
+                            </code>
+                        </motion.div>
                         <p className="text-sm text-white/80">
                             Los rangos deben ser números de 3 dígitos entre 001 y 500. Los rangos pueden superponerse.
                         </p>
                     </div>
-                    <input
-                        type="file"
-                        accept=".csv"
-                        onChange={(e) => onDrop(e.target.files ? [e.target.files[0]] : [])}
-                        className="block w-full text-sm text-white/70
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-full file:border-0
-              file:text-sm file:font-semibold
-              file:bg-violet-50 file:text-violet-700
-              hover:file:bg-violet-100"
-                    />
-                    <button
-                        onClick={handleUpload}
-                        className="w-full bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white font-bold py-2 px-4 rounded-lg hover:from-violet-600 hover:to-fuchsia-600 transition-all duration-200"
-                        disabled={!file}
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="space-y-4"
                     >
-                        Cargar CSV
-                    </button>
+                        <label
+                            htmlFor="csvFile"
+                            className="block w-full p-4 border-2 border-dashed border-white/30 rounded-2xl cursor-pointer hover:bg-white/10 transition-all duration-300"
+                        >
+                            <input
+                                type="file"
+                                id="csvFile"
+                                accept=".csv"
+                                onChange={(e) => onDrop(e.target.files ? [e.target.files[0]] : [])}
+                                className="hidden"
+                            />
+                            <div className="flex flex-col items-center gap-2">
+                                <Upload className="h-10 w-10 text-blue-300" />
+                                <span className="text-sm font-medium text-white/80">
+                                    {file ? file.name : "Haz clic para seleccionar un archivo CSV"}
+                                </span>
+                            </div>
+                        </label>
+
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="w-full bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={handleUpload}
+                            disabled={!file}
+                        >
+                            Cargar CSV
+                        </motion.button>
+                    </motion.div>
+
                     {error && (
-                        <p className="text-red-500 text-sm mt-2">{error}</p>
+                        <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="text-red-500 text-sm mt-2"
+                        >
+                            {error}
+                        </motion.p>
                     )}
                 </div>
             </DialogContent>
