@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom'
-import { Home, LogOut, Gift, Users, Trophy, Plus, Upload, List, Trash2, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
+import { Home, LogOut, Gift, Users, Trophy, Plus, Upload, List, Trash2, RefreshCw, X, Menu } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { AddPrizeModal } from '@/components/AddPrizeModal'
 import UploadCSVModal from '@/components/UploadCSVModal'
@@ -16,7 +16,8 @@ import { WinnerModal } from '@/components/WinnerModal'
 import { DrawSection } from '@/components/DrawSection'
 import { Prize, Participant, Winner } from '../types'
 import { ResetWarningModal } from '@/components/ResetWarningModal'
-import CustomLoader from '@/components/CustomLoader'
+import MinimalistLoader from '@/components/MinimalistLoader'
+import { AddParticipantModal } from '@/components/AddParticipantModal'
 
 import { request } from '@/services/index'
 import { URL_PARTICIPANT, URL_PRIZE, URL_WINNER, URL_PRIZE_BULK, URL_WINNER_FULL, URL_WINNER_FILTER, URL_PARTICIPANTS_BULK } from '@/constants/index'
@@ -35,11 +36,13 @@ const AdminDashboard = () => {
     const [currentWinner, setCurrentWinner] = useState<Winner | null>(null)
     const [isLeftPanelVisible, setIsLeftPanelVisible] = useState(true)
     const [showResetWarningModal, setShowResetWarningModal] = useState(false)
+    const [showAddParticipantModal, setShowAddParticipantModal] = useState(false)
     const navigate = useNavigate()
     const { toast } = useToast()
 
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(false)
+    const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
         const loadData = async () => {
@@ -79,12 +82,21 @@ const AdminDashboard = () => {
         loadData()
     }, [navigate])
 
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 1024);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     if (loading) {
         return (
-            <CustomLoader
-                variant="settings"
-                size="large"
-                color="purple"
+            <MinimalistLoader
+                text="Cargando"
+                color="#3b82f6"
+                blur={10}
             />
         )
     }
@@ -404,6 +416,44 @@ const AdminDashboard = () => {
         }
     }
 
+    const handleAddParticipant = async (newParticipant: { name: string; cedula: string; ticket_number?: string }) => {
+        const participant = {
+            ...newParticipant,
+            active: true
+        }
+
+        try {
+            const responseParticipant = await request(URL_PARTICIPANT, "POST", participant);
+
+            if (responseParticipant.status_code === 200) {
+                const updatedParticipants = [...participants, responseParticipant.data]
+                setParticipants(updatedParticipants)
+                toast({
+                    variant: "success",
+                    title: "Participante añadido",
+                    description: "El participante ha sido agregado exitosamente.",
+                })
+                return { success: true, message: "Participante agregado con éxito" }
+            } else {
+                const errorMessage = responseParticipant.error ? "Error al agregar el participante" : "No se pudo agregar el participante. Por favor, inténtelo de nuevo."
+                toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: errorMessage,
+                })
+                return { success: false, message: errorMessage }
+            }
+        } catch (error) {
+            console.error("Error al agregar participante:", error)
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Ocurrió un error inesperado. Por favor, inténtelo de nuevo.",
+            })
+            return { success: false, message: "Error inesperado al agregar el participante" }
+        }
+    }
+
     return (
         <div className="min-h-screen relative overflow-hidden">
             {/* Fondo dinámico */}
@@ -427,33 +477,35 @@ const AdminDashboard = () => {
                 <header className="bg-white/10 backdrop-blur-lg border-b border-white/20">
                     <div className="container mx-auto px-4 py-4 flex justify-between items-center">
                         <div className="flex items-center space-x-4">
-                            <img src="/forza-logo.png" alt="Forza Logo" className="h-8" />
-                            <img src="/gestar-logo.png" alt="Gestar Logo" className="h-8" />
+                            <img src="/forza-logo.png" alt="Forza Logo" className="h-6 sm:h-8" />
+                            <img src="/gestar-logo.png" alt="Gestar Logo" className="h-6 sm:h-8" />
                         </div>
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2 sm:space-x-4">
+                            {isMobile && (
+                                <Button
+                                    variant="ghost"
+                                    onClick={toggleLeftPanel}
+                                    className="text-white hover:bg-white/10 rounded-full"
+                                    title={isLeftPanelVisible ? "Ocultar panel" : "Mostrar panel"}
+                                >
+                                    {isLeftPanelVisible ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                                </Button>
+                            )}
                             <Button
                                 variant="ghost"
-                                onClick={toggleLeftPanel}
+                                onClick={() => navigate('/')}
                                 className="text-white hover:bg-white/10 rounded-full"
-                                title={isLeftPanelVisible ? "Ocultar panel" : "Mostrar panel"}
                             >
-                                {isLeftPanelVisible ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                                <Home className="h-5 w-5" />
+                                <span className="hidden sm:inline ml-2">Inicio</span>
                             </Button>
                             <Button
                                 variant="ghost"
                                 onClick={() => navigate('/')}
                                 className="text-white hover:bg-white/10 rounded-full"
                             >
-                                <Home className="mr-2 h-5 w-5" />
-                                Inicio
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                onClick={() => navigate('/')}
-                                className="text-white hover:bg-white/10 rounded-full"
-                            >
-                                <LogOut className="mr-2 h-5 w-5" />
-                                Salir
+                                <LogOut className="h-5 w-5" />
+                                <span className="hidden sm:inline ml-2">Salir</span>
                             </Button>
                             <Button
                                 variant="ghost"
@@ -467,17 +519,17 @@ const AdminDashboard = () => {
                     </div>
                 </header>
 
-                <main className="container mx-auto px-6 py-12">
-                    <div className="grid grid-cols-12 gap-8">
+                <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                         {/* Left Sidebar */}
                         <AnimatePresence>
-                            {isLeftPanelVisible && (
+                            {(isLeftPanelVisible || !isMobile) && (
                                 <motion.div
                                     initial={{ opacity: 0, x: -300 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: -300 }}
                                     transition={{ duration: 0.3 }}
-                                    className="col-span-3 space-y-8"
+                                    className="lg:col-span-3 space-y-8"
                                 >
                                     {/* Prize Management */}
                                     <motion.div
@@ -490,14 +542,14 @@ const AdminDashboard = () => {
                                             Gestión de Premios
                                         </h2>
                                         <div className="space-y-4">
-                                            <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <Button onClick={() => setShowAddPrizeModal(true)} className="w-full bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-300 hover:scale-105">
                                                     <Plus className="mr-2 h-5 w-5" />
                                                     Agregar
                                                 </Button>
                                                 <Button onClick={() => setShowUploadCSVModal(true)} className="w-full bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-300 hover:scale-105 flex items-center justify-center h-10">
                                                     <Upload className="h-4 w-4 mr-1.5 shrink-0" />
-                                                    Cg CSV
+                                                    Cargar CSV
                                                 </Button>
                                                 <Button onClick={() => {
                                                     setShowPrizeListModal(true)
@@ -543,7 +595,11 @@ const AdminDashboard = () => {
                                             Gestión de Participantes
                                         </h2>
                                         <div className="space-y-4">
-                                            <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <Button onClick={() => setShowAddParticipantModal(true)} className="w-full bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-300 hover:scale-105">
+                                                    <Plus className="mr-2 h-5 w-5" />
+                                                    Agregar
+                                                </Button>
                                                 <Button onClick={() => setShowUploadParticipantsCSVModal(true)} className="w-full bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-300 hover:scale-105">
                                                     <Upload className="mr-2 h-5 w-5" />
                                                     Cargar CSV
@@ -600,7 +656,7 @@ const AdminDashboard = () => {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.2 }}
-                            className={`${isLeftPanelVisible ? 'col-span-6' : 'col-span-9'} rounded-xl bg-white/10 backdrop-blur-lg border border-white/20 p-8 flex flex-col items-center justify-center min-h-[600px] overflow-y-auto`}
+                            className="lg:col-span-6 rounded-xl bg-white/10 backdrop-blur-lg border border-white/20 p-4 sm:p-8 flex flex-col items-center justify-center min-h-[400px] sm:min-h-[600px] overflow-y-auto"
                         >
                             <DrawSection
                                 prizes={prizes.filter(p => !p.sorteado)}
@@ -614,7 +670,7 @@ const AdminDashboard = () => {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.3 }}
-                            className="col-span-3 rounded-xl bg-white/10 backdrop-blur-lg border border-white/20 p-6 overflow-y-auto max-h-[600px]"
+                            className="lg:col-span-3 rounded-xl bg-white/10 backdrop-blur-lg border border-white/20 p-4 sm:p-6 overflow-y-auto max-h-[400px] sm:max-h-[600px]"
                         >
                             <h2 className="text-xl font-semibold text-white mb-4 flex items-center justify-between">
                                 <div className="flex items-center">
@@ -712,6 +768,12 @@ const AdminDashboard = () => {
                 isOpen={showResetWarningModal}
                 onOpenChange={setShowResetWarningModal}
                 onConfirmReset={handleTotalReset}
+            />
+            <AddParticipantModal
+                isOpen={showAddParticipantModal}
+                onOpenChange={setShowAddParticipantModal}
+                onAddParticipant={handleAddParticipant}
+                existingParticipants={participants}
             />
         </div>
     )

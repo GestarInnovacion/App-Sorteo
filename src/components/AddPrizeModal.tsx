@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -17,6 +17,13 @@ export function AddPrizeModal({ isOpen, onOpenChange, onAddSuccess }: AddPrizeMo
     const [newPrize, setNewPrize] = useState({ name: '', range_start: '', range_end: '' })
     const [errors, setErrors] = useState({ name: false, range_start: false, range_end: false })
     const [isAdding, setIsAdding] = useState(false)
+
+    useEffect(() => {
+        if (!isOpen) {
+            setNewPrize({ name: '', range_start: '', range_end: '' })
+            setErrors({ name: false, range_start: false, range_end: false })
+        }
+    }, [isOpen])
 
     const validateFields = () => {
         const newErrors = {
@@ -52,7 +59,7 @@ export function AddPrizeModal({ isOpen, onOpenChange, onAddSuccess }: AddPrizeMo
         <AnimatePresence>
             {isOpen && (
                 <Dialog open={isOpen} onOpenChange={onOpenChange}>
-                    <DialogContent className="bg-gradient-to-br from-teal-700 to-blue-900 text-white sm:max-w-[425px] rounded-3xl border-2 border-white/20 shadow-xl">
+                    <DialogContent className="sm:max-w-[425px] w-[95vw] max-w-[95vw] sm:w-full bg-gradient-to-br from-teal-700 to-blue-900 text-white rounded-3xl border-2 border-white/20 shadow-xl">
                         <DialogHeader>
                             <DialogTitle className="text-3xl font-bold text-center flex items-center justify-center">
                                 <Gift className="mr-2 h-8 w-8" />
