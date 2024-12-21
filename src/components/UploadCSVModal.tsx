@@ -1,6 +1,5 @@
 import { AlertCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { Prize } from "@/types/index";
 import { useCallback, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { motion } from 'framer-motion';

@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
 import { Upload, AlertCircle, FileText, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Participant } from '../types'
 
 interface UploadParticipantsCSVModalProps {
     isOpen: boolean
@@ -15,7 +14,7 @@ interface UploadParticipantsCSVModalProps {
 
 export function UploadParticipantsCSVModal({ isOpen, onOpenChange, onUploadSuccess }: UploadParticipantsCSVModalProps) {
     const [file, setFile] = useState<File | null>(null)
-    const [uploading, setUploading] = useState(false)
+    const [uploading] = useState(false)
     const { toast } = useToast()
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {

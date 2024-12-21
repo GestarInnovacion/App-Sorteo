@@ -51,8 +51,8 @@ export function AddParticipantModal({ isOpen, onOpenChange, onAddParticipant, ex
             case 'cedula':
                 if (value.trim() === '') {
                     error = 'La cédula es requerida'
-                } else if (value.length !== 10) {
-                    error = 'La cédula debe tener 10 dígitos'
+                } else if (value.length > 10) {
+                    error = 'La cédula no puede tener más de 10 dígitos'
                 } else if (existingParticipants.some(p => p.cedula === value)) {
                     error = 'Ya existe un participante con esta cédula'
                 }
