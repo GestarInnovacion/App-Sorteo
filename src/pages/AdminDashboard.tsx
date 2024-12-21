@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { Home, LogOut, Gift, Users, Trophy, Plus, Upload, List, Trash2, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { AddPrizeModal } from '@/components/AddPrizeModal'
-import { UploadCSVModal } from '@/components/UploadCSVModal'
+import UploadCSVModal from '@/components/UploadCSVModal'
 import { UploadParticipantsCSVModal } from '@/components/UploadParticipantsCSVModal'
 import { ViewListModal } from '@/components/ViewListModal'
 import { Card, CardContent } from '@/components/ui/card'
@@ -113,34 +113,19 @@ const AdminDashboard = () => {
         }
     }
 
-    const handleUploadCSV = async (file: File) => {
-        const reader = new FileReader()
-        reader.onload = async (e) => {
-            const text = e.target?.result as string
-            const rows = text.split('\n').filter(row => row.trim() !== '')
-            const newPrizes: Omit<Prize, 'id_prize' | 'sorteado'>[] = rows.map((row) => {
-                const [name, range_start, range_end] = row.split(';').map(field => field.trim())
-                return {
-                    name,
-                    range_start: parseInt(range_start),
-                    range_end: parseInt(range_end),
-                }
+    const handleUploadCSV = async (newPrizes: { name: string; range_start: string; range_end: string; }[]) => {
+        const result = await request(URL_PRIZE_BULK, "POST", { "prizes": newPrizes })
+
+        if (result.status_code === 200) {
+            const updatedPrizes = [...prizes, ...result.data]
+            setPrizes(updatedPrizes)
+
+            toast({
+                variant: "success",
+                title: "CSV cargado",
+                description: `Se han agregado ${newPrizes.length} premios exitosamente.`,
             })
-
-            const result = await request(URL_PRIZE_BULK, "POST", { "prizes": newPrizes })
-
-            if (result.status_code === 200) {
-                const updatedPrizes = [...prizes, ...result.data]
-                setPrizes(updatedPrizes)
-
-                toast({
-                    variant: "success",
-                    title: "CSV cargado",
-                    description: `Se han agregado ${newPrizes.length} premios exitosamente.`,
-                })
-            }
         }
-        reader.readAsText(file)
     }
 
     const handleUploadParticipantsCSV = async (file: File) => {
@@ -149,11 +134,11 @@ const AdminDashboard = () => {
         reader.onload = async (e) => {
             const text = e.target?.result as string;
             const rows = text.split('\n').filter(row => row.trim() !== '');
-        
+
             // Filtrar participantes con campos vacíos (name, cedula o ticket_number)
             const newParticipants: Omit<Participant, 'id_participant'>[] = rows.map((row) => {
                 const [name, cedula] = row.split(';').map(field => field.trim());
-        
+
                 // Validar si alguno de los campos está vacío
                 if (name && cedula) {
                     return {
@@ -162,11 +147,11 @@ const AdminDashboard = () => {
                         active: false
                     };
                 }
-                return null; 
+                return null;
             }).filter(participant => participant !== null);
-        
+
             const result = await request(URL_PARTICIPANTS_BULK, "POST", { "participants": newParticipants });
-        
+
 
             if (result.status_code === 200) {
                 const updatedParticipants = [...participants, ...result.data]
@@ -228,7 +213,7 @@ const AdminDashboard = () => {
 
     const handleSelectPrize = async (prize: Prize) => {
         const availableParticipants = participants.filter(p =>
-            p.active && parseInt(p.ticket_number?p.ticket_number:"") >= prize.range_start && parseInt(p.ticket_number?p.ticket_number:"") <= prize.range_end
+            p.active && parseInt(p.ticket_number ? p.ticket_number : "") >= prize.range_start && parseInt(p.ticket_number ? p.ticket_number : "") <= prize.range_end
         )
 
         if (availableParticipants.length === 0) {
@@ -586,21 +571,21 @@ const AdminDashboard = () => {
                                                     </div>
                                                     <div className="text-center">
                                                         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm mb-2">
-                                                            <p className="text-xl font-bold text-white">{participants.filter(p => p.active).length}</p>
+                                                            <p className="text-xl font-bold text-white">{participants.filter(p => p.ticket_number && p.active).length}</p>
                                                         </div>
-                                                        <p className="text-xs text-white/80">Activos</p>
+                                                        <p className="text-xs text-white/80">Asistentes</p>
                                                     </div>
                                                     <div className="text-center">
                                                         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm mb-2">
-                                                            <p className="text-xl font-bold text-white">{participants.filter(p => p.ticket_number).length}</p>
+                                                            <p className="text-xl font-bold text-white">{participants.filter(p => p.ticket_number && !p.active).length}</p>
                                                         </div>
-                                                        <p className="text-xs text-white/80">Presentes</p>
+                                                        <p className="text-xs text-white/80">Ganadores</p>
                                                     </div>
                                                     <div className="text-center">
                                                         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/10 backdrop-blur-sm mb-2">
-                                                            <p className="text-xl font-bold text-white">{participants.filter(p => p.active && p.ticket_number).length}</p>
+                                                            <p className="text-xl font-bold text-white">{participants.filter(p => !p.ticket_number && !p.active).length}</p>
                                                         </div>
-                                                        <p className="text-xs text-white/80">Elegibles</p>
+                                                        <p className="text-xs text-white/80">No Asistentes</p>
                                                     </div>
                                                 </div>
                                             </div>

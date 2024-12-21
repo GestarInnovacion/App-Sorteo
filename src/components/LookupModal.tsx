@@ -16,9 +16,11 @@ interface LookupModalProps {
 
 export function LookupModal({ isOpen, onOpenChange }: LookupModalProps) {
     const [searchTerm, setSearchTerm] = useState('')
+    const [ticketNumber, setTicketNumber] = useState('')
     const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null)
     const [participants, setParticipants] = useState<Participant[]>([])
     const [error, setError] = useState<string | null>(null)
+    const [isTicketNumberSubmitted, setIsTicketNumberSubmitted] = useState(false)
     const { toast } = useToast()
 
     useEffect(() => {
@@ -40,13 +42,14 @@ export function LookupModal({ isOpen, onOpenChange }: LookupModalProps) {
 
     useEffect(() => {
         if (searchTerm.length > 0) {
-            const foundParticipant = participants.find(p => p.cedula === searchTerm)
+            const foundParticipant = participants.find(p => p.cedula === searchTerm || p.name.toLowerCase() === searchTerm.toLowerCase())
             if (foundParticipant) {
                 setSelectedParticipant(foundParticipant)
                 setError(null)
+                setIsTicketNumberSubmitted(!!foundParticipant.ticket_number)
             } else {
                 setSelectedParticipant(null)
-                setError('No se encontró ningún participante con ese número de cédula.')
+                setError('No se encontró ningún participante con esa cédula o nombre.')
             }
         } else {
             setSelectedParticipant(null)
@@ -55,35 +58,83 @@ export function LookupModal({ isOpen, onOpenChange }: LookupModalProps) {
     }, [searchTerm, participants])
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/\D/g, '') // Solo permite números
+        const value = e.target.value
         setSearchTerm(value)
     }
 
-    const handleMarkAttendance = async () => {
-        if (selectedParticipant) {
+    const handleTicketNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let value = e.target.value.replace(/\D/g, '') // Solo permite números
+
+        // Limita a 3 dígitos
+        if (value.length > 3) {
+            value = value.slice(0, 3)
+        }
+
+        setTicketNumber(value)
+    }
+
+    const handleSubmitTicketNumber = async () => {
+        if (selectedParticipant && ticketNumber) {
+            // Validación de longitud
+            if (ticketNumber.length !== 3) {
+                toast({
+                    title: "Error",
+                    description: "El número de sorteo debe tener exactamente 3 dígitos.",
+                    variant: "destructive",
+                })
+                return
+            }
+
+            const numericTicket = parseInt(ticketNumber, 10)
+
+            // Validación de rango
+            if (numericTicket < 1 || numericTicket > 500) {
+                toast({
+                    title: "Error",
+                    description: "El número de sorteo debe estar entre 001 y 500.",
+                    variant: "destructive",
+                })
+                return
+            }
+
+            const paddedTicketNumber = ticketNumber.padStart(3, '0')
             try {
                 const response = await request(URL_PARTICIPANT, 'PUT', {
                     id_participant: selectedParticipant.id_participant,
-                    asistencia: true
+                    ticket_number: paddedTicketNumber,
+                    active: true
                 })
                 if (response.status_code === 200) {
-                    setSelectedParticipant({ ...selectedParticipant, asistencia: true })
+                    setSelectedParticipant({ ...selectedParticipant, ticket_number: paddedTicketNumber, active: true })
+                    setIsTicketNumberSubmitted(true)
                     toast({
-                        title: "Asistencia marcada",
-                        description: "La asistencia del participante ha sido registrada exitosamente.",
+                        title: "Éxito",
+                        description: "El número de sorteo ha sido registrado exitosamente y el participante ha sido activado.",
                         variant: "success",
                     })
                 } else {
-                    throw new Error(response.data.detail || "Error al marcar la asistencia")
+                    throw new Error(response.data.detail || "Error al registrar el número de sorteo")
                 }
             } catch (error) {
-                console.error('Error marking attendance:', error)
+                console.error('Error registering ticket number:', error)
                 toast({
                     title: "Error",
-                    description: "Hubo un problema al marcar la asistencia. Por favor, inténtelo de nuevo.",
+                    description: "Hubo un problema al registrar el número de sorteo. Por favor, inténtelo de nuevo.",
                     variant: "destructive",
                 })
             }
+        } else if (!selectedParticipant) {
+            toast({
+                title: "Error",
+                description: "Por favor, seleccione un participante antes de registrar el número de sorteo.",
+                variant: "destructive",
+            })
+        } else if (!ticketNumber) {
+            toast({
+                title: "Error",
+                description: "Por favor, ingrese un número de sorteo antes de registrar.",
+                variant: "destructive",
+            })
         }
     }
 
@@ -93,14 +144,14 @@ export function LookupModal({ isOpen, onOpenChange }: LookupModalProps) {
                 className="bg-gradient-to-br from-purple-900 to-blue-900 border-none text-white sm:max-w-[425px] rounded-3xl overflow-hidden"
             >
                 <DialogHeader>
-                    <DialogTitle className="text-3xl font-bold text-center mb-6">Buscar Número de Sorteo</DialogTitle>
+                    <DialogTitle className="text-3xl font-bold text-center mb-6">Buscar Participante</DialogTitle>
                     <DialogDescription className="text-white/80 text-center">
-                        Ingrese el número de cédula completo para buscar su número de sorteo
+                        Ingrese el número de cédula o nombre completo para buscar
                     </DialogDescription>
                 </DialogHeader>
                 <div className="relative mb-4">
                     <Input
-                        placeholder="Ingrese número de cédula completo"
+                        placeholder="Ingrese número de cédula o nombre completo"
                         value={searchTerm}
                         onChange={handleInputChange}
                         className="bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-full py-6 pl-12 pr-4 text-lg"
@@ -135,20 +186,45 @@ export function LookupModal({ isOpen, onOpenChange }: LookupModalProps) {
                                     <div className="bg-white/30 p-3 rounded-full">
                                         <Ticket className="h-6 w-6 text-white" />
                                     </div>
-                                    <p className="text-3xl font-bold">{selectedParticipant.ticket_number}</p>
+                                    {!isTicketNumberSubmitted && (
+                                        <>
+                                            <Input
+                                                type="text"
+                                                placeholder="Ingrese número de sorteo (001-500)"
+                                                value={ticketNumber}
+                                                onChange={handleTicketNumberChange}
+                                                className="bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl py-2 px-3 text-lg"
+                                                maxLength={3}
+                                            />
+                                            <p className="text-xs text-white/70 mt-1">
+                                                El número de sorteo debe ser de 3 dígitos, entre 001 y 500.
+                                            </p>
+                                        </>
+                                    )}
+                                    {isTicketNumberSubmitted && (
+                                        <p className="text-3xl font-bold">{selectedParticipant.ticket_number}</p>
+                                    )}
                                 </div>
                                 <div className="flex items-center space-x-4">
-                                    <div className={`bg-white/30 p-3 rounded-full ${selectedParticipant.asistencia ? 'bg-green-500' : 'bg-red-500'}`}>
+                                    <div className={`bg-white/30 p-3 rounded-full ${selectedParticipant.active || isTicketNumberSubmitted ? 'bg-green-500' : 'bg-red-500'}`}>
                                         <CheckCircle className="h-6 w-6 text-white" />
                                     </div>
                                     <p className="text-xl">
-                                        <span className="font-semibold">Asistencia:</span> {selectedParticipant.asistencia ? 'Registrada' : 'No registrada'}
+                                        <span className="font-semibold">Estado:</span> {selectedParticipant.active || isTicketNumberSubmitted ? 'Activo' : 'Inactivo'}
                                     </p>
                                 </div>
                             </div>
-                            <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-4 text-center">
-                                <p className="text-lg font-semibold">Número de Sorteo</p>
-                            </div>
+                            {!isTicketNumberSubmitted && (
+                                <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-4">
+                                    <Button
+                                        onClick={handleSubmitTicketNumber}
+                                        className="w-full bg-white text-blue-900 hover:bg-blue-100 transition-colors duration-200 py-2 rounded-xl font-semibold"
+                                        disabled={ticketNumber === ''}
+                                    >
+                                        Registrar Número de Sorteo
+                                    </Button>
+                                </div>
+                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -164,24 +240,8 @@ export function LookupModal({ isOpen, onOpenChange }: LookupModalProps) {
                 )}
                 {!selectedParticipant && !error && searchTerm.length === 0 && (
                     <p className="text-center text-white/70 mt-4">
-                        Ingrese el número de cédula completo para buscar
+                        Ingrese el número de cédula o nombre completo para buscar
                     </p>
-                )}
-                {selectedParticipant && !selectedParticipant.asistencia && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="mt-6"
-                    >
-                        <Button
-                            onClick={handleMarkAttendance}
-                            className="w-full bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white font-bold py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
-                        >
-                            <CheckCircle className="mr-2 h-5 w-5" />
-                            Marcar Asistencia
-                        </Button>
-                    </motion.div>
                 )}
             </DialogContent>
         </Dialog>

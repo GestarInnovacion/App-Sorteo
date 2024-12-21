@@ -17,7 +17,7 @@ export function DrawSection({ prizes, participants, onSelectPrize }: DrawSection
 
     const handleSelectPrize = (prize: Prize) => {
         const eligibleParticipants = participants.filter(p =>
-            p.active && p.asistencia && parseInt(p.ticket_number) >= prize.range_start && parseInt(p.ticket_number) <= prize.range_end
+            p.active && p.ticket_number && parseInt(p.ticket_number) >= prize.range_start && parseInt(p.ticket_number) <= prize.range_end
         )
 
         if (eligibleParticipants.length === 0) {
@@ -82,13 +82,13 @@ export function DrawSection({ prizes, participants, onSelectPrize }: DrawSection
                                 whileTap={{ scale: 0.95 }}
                             >
                                 <Card
-                                    className={`relative overflow-hidden bg-white/10 backdrop-blur-md border-white/20 cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20 ${participants.filter(p => p.active && p.asistencia && parseInt(p.ticket_number) >= prize.range_start && parseInt(p.ticket_number) <= prize.range_end).length === 0
+                                    className={`relative overflow-hidden bg-white/10 backdrop-blur-md border-white/20 cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20 ${participants.filter(p => p.active && p.ticket_number && parseInt(p.ticket_number) >= prize.range_start && parseInt(p.ticket_number) <= prize.range_end).length === 0
                                             ? 'opacity-50'
                                             : ''
                                         }`}
                                     onClick={() => handleSelectPrize(prize)}
                                 >
-                                    {participants.filter(p => p.active && p.asistencia && parseInt(p.ticket_number) >= prize.range_start && parseInt(p.ticket_number) <= prize.range_end).length === 0 && (
+                                    {participants.filter(p => p.active && p.ticket_number && parseInt(p.ticket_number) >= prize.range_start && parseInt(p.ticket_number) <= prize.range_end).length === 0 && (
                                         <div className="absolute top-2 right-2 text-yellow-500">
                                             <AlertCircle className="w-6 h-6" />
                                         </div>

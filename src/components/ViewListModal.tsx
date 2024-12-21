@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Card, CardContent } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Gift, Users, Trash2, Search, CheckCircle, XCircle, AlertTriangle, User, CreditCard, Ticket, Hash, DollarSign } from 'lucide-react'
+import { Gift, Users, Trash2, Search, CheckCircle, XCircle, User, CreditCard, Ticket, Hash, DollarSign, Trophy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Input } from '@/components/ui/input'
@@ -123,7 +123,7 @@ function PrizeItem({ prize, onDelete }: { prize: Prize; onDelete: (id: number) =
                 </div>
                 <div className="flex items-center space-x-2">
                     <Hash className="h-4 w-4 text-blue-300" />
-                    <p className="text-sm text-white/80">Rango: {prize.range_start} - {prize.range_end}</p>
+                    <p className="text-sm text-white/80">Rango: {prize.range_start.toString().padStart(3, '0')} - {prize.range_end.toString().padStart(3, '0')}</p>
                 </div>
             </div>
             <div className="flex justify-between space-x-2">
@@ -169,29 +169,29 @@ function PrizeItem({ prize, onDelete }: { prize: Prize; onDelete: (id: number) =
 
 function ParticipantItem({ participant, onDelete }: { participant: Participant; onDelete: (id: number) => void }) {
     const getStatusInfo = () => {
-        if (!participant.active) {
+        if (participant.ticket_number && participant.active) {
             return {
-                activeLabel: 'Inactivo',
-                asistenciaLabel: 'Ausente',
-                activeColor: 'bg-red-500 text-white',
-                asistenciaColor: 'bg-red-500 text-white',
-                icon: XCircle
+                label: 'Asistente',
+                color: 'bg-green-500 text-white',
+                icon: CheckCircle
             }
-        } else if (!participant.asistencia) {
+        } else if (participant.ticket_number && !participant.active) {
             return {
-                activeLabel: 'Activo',
-                asistenciaLabel: 'Inactivo',
-                activeColor: 'bg-green-500 text-white',
-                asistenciaColor: 'bg-yellow-500 text-yellow-900',
-                icon: AlertTriangle
+                label: 'Ganador',
+                color: 'bg-yellow-500 text-yellow-900',
+                icon: Trophy
+            }
+        } else if (!participant.ticket_number && !participant.active) {
+            return {
+                label: 'No Asistente',
+                color: 'bg-red-500 text-white',
+                icon: XCircle
             }
         } else {
             return {
-                activeLabel: 'Activo',
-                asistenciaLabel: 'Activo',
-                activeColor: 'bg-green-500 text-white',
-                asistenciaColor: 'bg-green-500 text-white',
-                icon: CheckCircle
+                label: 'Registrado',
+                color: 'bg-blue-500 text-white',
+                icon: User
             }
         }
     }
@@ -216,13 +216,9 @@ function ParticipantItem({ participant, onDelete }: { participant: Participant; 
                 </div>
             </div>
             <div className="flex justify-between space-x-2">
-                <span className={`px-2 py-1 rounded-full text-xs flex items-center flex-1 justify-center ${statusInfo.activeColor}`}>
+                <span className={`px-2 py-1 rounded-full text-xs flex items-center flex-1 justify-center ${statusInfo.color}`}>
                     <StatusIcon className="h-3 w-3 mr-1" />
-                    Estado: {statusInfo.activeLabel}
-                </span>
-                <span className={`px-2 py-1 rounded-full text-xs flex items-center flex-1 justify-center ${statusInfo.asistenciaColor}`}>
-                    <StatusIcon className="h-3 w-3 mr-1" />
-                    Asistencia: {statusInfo.asistenciaLabel}
+                    Estado: {statusInfo.label}
                 </span>
             </div>
             <div className="flex justify-end">
@@ -232,16 +228,16 @@ function ParticipantItem({ participant, onDelete }: { participant: Participant; 
                             <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => participant.active && onDelete(participant.id_participant)}
-                                className={`text-white rounded-full p-1 ${!participant.active ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/20'}`}
-                                disabled={!participant.active}
+                                onClick={() => onDelete(participant.id_participant)}
+                                className={`text-white rounded-full p-1 ${participant.ticket_number && !participant.active ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/20'}`}
+                                disabled={!!(participant.ticket_number && !participant.active)}
                             >
                                 <Trash2 className="h-4 w-4" />
                             </Button>
                         </TooltipTrigger>
-                        {!participant.active && (
+                        {participant.ticket_number && !participant.active && (
                             <TooltipContent>
-                                <p>No se puede eliminar un participante inactivo</p>
+                                <p>No se puede eliminar un ganador</p>
                             </TooltipContent>
                         )}
                     </Tooltip>
