@@ -3,6 +3,7 @@
 const URL_BASE = 'http://localhost:8000';
 
 export const URL_LOGIN = `${URL_BASE}/login`;
+export const URL_LOGOUT = `${URL_LOGIN}/logout`;
 export const URL_PROFILE = `${URL_BASE}/users/profile`;
 
 export const URL_PARTICIPANT = `${URL_BASE}/participants`;
