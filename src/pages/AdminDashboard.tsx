@@ -20,7 +20,7 @@ import MinimalistLoader from '@/components/MinimalistLoader'
 import { AddParticipantModal } from '@/components/AddParticipantModal'
 
 import { request } from '@/services/index'
-import { URL_PARTICIPANT, URL_PRIZE, URL_WINNER, URL_PRIZE_BULK, URL_WINNER_FULL, URL_WINNER_FILTER, URL_PARTICIPANTS_BULK } from '@/constants/index'
+import { URL_PARTICIPANT, URL_PRIZE, URL_WINNER, URL_PRIZE_BULK, URL_WINNER_FULL, URL_WINNER_FILTER, URL_PARTICIPANTS_BULK, URL_CLEAN } from '@/constants/index'
 
 const AdminDashboard = () => {
     const [prizes, setPrizes] = useState<Prize[]>([])
@@ -384,11 +384,9 @@ const AdminDashboard = () => {
 
     const handleTotalReset = async (keyword: string) => {
         if (keyword === 'REINICIAR_TODO') {
-            const responseDeleteWinners = await request(URL_WINNER, "DELETE", { all: true })
-            const responseDeletePrizes = await request(URL_PRIZE, "DELETE", { all: true })
-            const responseDeleteParticipants = await request(URL_PARTICIPANT, "DELETE", { all: true })
+            const responseDeleteAll = await request(URL_CLEAN, "DELETE")
 
-            if (responseDeleteWinners.status_code === 200 && responseDeletePrizes.status_code === 200 && responseDeleteParticipants.status_code === 200) {
+            if (responseDeleteAll.status_code === 200) {
                 setWinners([])
                 setPrizes([])
                 setParticipants([])
