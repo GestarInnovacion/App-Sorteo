@@ -19,7 +19,7 @@ import { AddParticipantModal } from '@/components/AddParticipantModal'
 import { StatisticsDetailModal } from '@/components/StatisticsDetailModal'
 
 import { request } from '@/services/index'
-import { URL_PARTICIPANT, URL_PRIZE, URL_WINNER, URL_PRIZE_BULK, URL_WINNER_FULL, URL_WINNER_FILTER, URL_PARTICIPANTS_BULK, URL_CLEAN } from '@/constants/index'
+import { URL_PARTICIPANT, URL_PRIZE, URL_WINNER, URL_PRIZE_BULK, URL_WINNER_FULL, URL_WINNER_FILTER, URL_PARTICIPANTS_BULK, URL_CLEAN, URL_LOGOUT } from '@/constants/index'
 
 const AdminDashboard = () => {
     const [prizes, setPrizes] = useState<Prize[]>([])
@@ -509,7 +509,16 @@ const AdminDashboard = () => {
                             </Button>
                             <Button
                                 variant="ghost"
-                                onClick={() => navigate('/')}
+                                onClick={async () => {
+                                    try {
+                                        const responseLogout = await request(URL_LOGOUT, "DELETE");
+                                        if (responseLogout.status_code === 200) {
+                                             navigate('/');
+                                        }
+                                    } catch (error) {
+                                        console.error("Error al cerrar sesión:", error);
+                                    }}
+                                }
                                 className="text-white hover:bg-white/10 rounded-full"
                             >
                                 <LogOut className="h-5 w-5" />
