@@ -31,7 +31,7 @@ const HomePage = () => {
     const navigate = useNavigate()
     const { toast } = useToast()
 
-    const eventDate = new Date(2024, 11, 21, 15, 0, 0)
+    const eventDate = new Date(2024, 11, 21, 18, 0, 0)
 
     useEffect(() => {
         const handleScroll = () => setScrollY(window.scrollY)
@@ -209,7 +209,7 @@ const HomePage = () => {
                                                     className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white py-4 md:py-5 text-sm md:text-base rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
                                                 >
                                                     <Search className="mr-2 h-4 w-4" />
-                                                    Buscar Número de Sorteo
+                                                    Registrar Numero de Sorteo
                                                 </Button>
                                             </motion.div>
                                         </motion.div>
