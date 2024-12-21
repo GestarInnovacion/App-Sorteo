@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
 import { Upload, AlertCircle, FileText, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Participant } from '../types'
 
 interface UploadParticipantsCSVModalProps {
     isOpen: boolean
@@ -14,7 +15,7 @@ interface UploadParticipantsCSVModalProps {
 
 export function UploadParticipantsCSVModal({ isOpen, onOpenChange, onUploadSuccess }: UploadParticipantsCSVModalProps) {
     const [file, setFile] = useState<File | null>(null)
-    const [uploading] = useState(false)
+    const [uploading, setUploading] = useState(false)
     const { toast } = useToast()
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,14 +49,18 @@ export function UploadParticipantsCSVModal({ isOpen, onOpenChange, onUploadSucce
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[425px] bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-3xl border-2 border-white/20 shadow-xl">
+            <DialogContent className="sm:max-w-[425px] w-[95vw] max-w-[95vw] sm:w-full bg-gradient-to-br from-teal-700 to-blue-900 text-white rounded-3xl border-2 border-white/20 shadow-xl">
                 <DialogHeader>
-                    <DialogTitle className="text-3xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-yellow-500">
+                    <DialogTitle className="text-3xl font-bold text-center text-white">
                         Cargar Participantes CSV
                     </DialogTitle>
                 </DialogHeader>
-                <div className="grid gap-6 py-4">
-                    <div className="relative">
+                <div className="space-y-6">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="relative"
+                    >
                         <Input
                             id="csvFile"
                             type="file"
@@ -65,11 +70,11 @@ export function UploadParticipantsCSVModal({ isOpen, onOpenChange, onUploadSucce
                         />
                         <label
                             htmlFor="csvFile"
-                            className="flex items-center justify-center w-full p-4 bg-white/10 border-2 border-dashed border-white/30 rounded-xl cursor-pointer hover:bg-white/20 transition-all duration-300"
+                            className="flex items-center justify-center w-full p-8 bg-white/10 border-2 border-dashed border-white/30 rounded-2xl cursor-pointer hover:bg-white/20 transition-all duration-300"
                         >
                             <div className="flex flex-col items-center">
-                                <FileText className="w-12 h-12 mb-2 text-yellow-400" />
-                                <span className="text-sm font-medium">
+                                <FileText className="w-20 h-20 mb-4 text-blue-300" />
+                                <span className="text-lg font-medium">
                                     {file ? file.name : "Selecciona un archivo CSV"}
                                 </span>
                             </div>
@@ -80,21 +85,22 @@ export function UploadParticipantsCSVModal({ isOpen, onOpenChange, onUploadSucce
                                     initial={{ opacity: 0, scale: 0.5 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.5 }}
-                                    className="absolute top-2 right-2 p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors duration-300"
+                                    className="absolute top-2 right-2 p-2 bg-red-500 rounded-full hover:bg-red-600 transition-colors duration-300"
                                     onClick={() => setFile(null)}
                                 >
                                     <X className="w-4 h-4 text-white" />
                                 </motion.button>
                             )}
                         </AnimatePresence>
-                    </div>
+                    </motion.div>
+
                     <motion.div
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                     >
                         <Button
                             onClick={handleUpload}
-                            className="w-full bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white font-bold py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white font-bold py-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={!file || uploading}
                         >
                             {uploading ? (
@@ -113,13 +119,19 @@ export function UploadParticipantsCSVModal({ isOpen, onOpenChange, onUploadSucce
                             )}
                         </Button>
                     </motion.div>
-                    <div className="text-sm text-white/80 bg-white/10 p-4 rounded-xl flex items-start gap-3">
-                        <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0 text-yellow-400" />
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-sm text-white/80 bg-white/10 p-6 rounded-2xl flex items-start gap-4"
+                    >
+                        <AlertCircle className="h-7 w-7 mt-1 flex-shrink-0 text-yellow-300" />
                         <p>
                             El archivo CSV debe estar delimitado por punto y coma (;) y contener las columnas en el siguiente orden: <span className="font-semibold">name</span>, <span className="font-semibold">cedula</span>, <span className="font-semibold">ticket_number</span>.
                             Los campos 'active' y 'asistencia' se establecerán automáticamente.
                         </p>
-                    </div>
+                    </motion.div>
                 </div>
             </DialogContent>
         </Dialog>
